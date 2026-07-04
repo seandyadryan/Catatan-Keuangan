@@ -1,0 +1,33 @@
+#!/bin/sh
+set -eu
+
+FILE="pubspec.yaml"
+VERSION_LINE=$(grep -E '^version: [0-9]+\.[0-9]+\.[0-9]+\+[0-9]+' "$FILE" || true)
+
+if [ -z "$VERSION_LINE" ]; then
+  echo "pre-commit: version line not found in pubspec.yaml" >&2
+  exit 1
+fi
+
+VERSION=${VERSION_LINE#version: }
+BASE=${VERSION%+*}
+BUILD=${VERSION#*+}
+NEXT_BUILD=$((BUILD + 1))
+NEXT_VERSION="$BASE+$NEXT_BUILD"
+TMP_FILE=$(mktemp)
+
+awk -v next_version="$NEXT_VERSION" '
+  BEGIN { replaced = 0 }
+  /^version: / && replaced == 0 {
+    print "version: " next_version
+    replaced = 1
+    next
+  }
+  { print }
+' "$FILE" > "$TMP_FILE"
+
+cat "$TMP_FILE" > "$FILE"
+rm -f "$TMP_FILE"
+
+git add "$FILE"
+echo "pre-commit: bumped Flutter build number to $NEXT_VERSION"
