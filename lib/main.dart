@@ -14,9 +14,15 @@ import 'package:shared_preferences/shared_preferences.dart';
 const appName = 'Catatan Keuangan PRO';
 const appVersion = '1.1.25';
 const brandRed = Color(0xFFE9433D);
+const brandDark = Color(0xFF132F3A);
+const brandSoft = Color(0xFFFFF2F1);
 const incomeGreen = Color(0xFF08A345);
 const expenseRed = Color(0xFFD7473F);
-const pageBg = Color(0xFFF0F0F0);
+const pageBg = Color(0xFFF6F7F9);
+const surface = Color(0xFFFFFFFF);
+const lineColor = Color(0xFFE3E7EC);
+const textPrimary = Color(0xFF17212B);
+const textMuted = Color(0xFF6A737D);
 const storageTransactionsKey = 'transactions_v1';
 const storageExpenseCategoriesKey = 'expense_categories_v1';
 const storageIncomeCategoriesKey = 'income_categories_v1';
@@ -331,26 +337,56 @@ class _FinanceAppState extends State<FinanceApp> {
           GlobalWidgetsLocalizations.delegate,
         ],
         theme: ThemeData(
-          colorScheme: ColorScheme.fromSeed(seedColor: brandRed),
+          colorScheme: ColorScheme.fromSeed(
+            seedColor: brandRed,
+            primary: brandRed,
+            secondary: brandDark,
+            surface: surface,
+          ),
           scaffoldBackgroundColor: pageBg,
           fontFamily: 'Roboto',
           appBarTheme: const AppBarTheme(
             backgroundColor: brandRed,
             foregroundColor: Colors.white,
-            elevation: 1,
+            elevation: 0,
+            scrolledUnderElevation: 0,
             centerTitle: false,
-            titleTextStyle: TextStyle(fontSize: 22, fontWeight: FontWeight.w400),
-            iconTheme: IconThemeData(color: Colors.white, size: 28),
+            titleTextStyle: TextStyle(fontSize: 21, fontWeight: FontWeight.w600),
+            iconTheme: IconThemeData(color: Colors.white, size: 26),
           ),
           floatingActionButtonTheme: const FloatingActionButtonThemeData(
             backgroundColor: brandRed,
             foregroundColor: Colors.white,
-            elevation: 7,
+            elevation: 4,
           ),
           inputDecorationTheme: const InputDecorationTheme(
-            border: OutlineInputBorder(),
+            filled: true,
+            fillColor: Colors.white,
+            border: OutlineInputBorder(
+              borderRadius: BorderRadius.all(Radius.circular(8)),
+              borderSide: BorderSide(color: lineColor),
+            ),
+            enabledBorder: OutlineInputBorder(
+              borderRadius: BorderRadius.all(Radius.circular(8)),
+              borderSide: BorderSide(color: lineColor),
+            ),
             focusedBorder: OutlineInputBorder(
-              borderSide: BorderSide(color: brandRed, width: 1.5),
+              borderRadius: BorderRadius.all(Radius.circular(8)),
+              borderSide: BorderSide(color: brandRed, width: 1.4),
+            ),
+          ),
+          filledButtonTheme: FilledButtonThemeData(
+            style: FilledButton.styleFrom(
+              backgroundColor: brandRed,
+              foregroundColor: Colors.white,
+              shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
+            ),
+          ),
+          bottomSheetTheme: const BottomSheetThemeData(
+            backgroundColor: surface,
+            surfaceTintColor: Colors.transparent,
+            shape: RoundedRectangleBorder(
+              borderRadius: BorderRadius.vertical(top: Radius.circular(8)),
             ),
           ),
           useMaterial3: true,
@@ -692,10 +728,12 @@ class _HomePageState extends State<HomePage> with SingleTickerProviderStateMixin
         bottom: TabBar(
           controller: _tabController,
           indicatorColor: Colors.white,
-          indicatorWeight: 5,
+          indicatorWeight: 3,
+          dividerColor: Colors.transparent,
           labelColor: Colors.white,
-          unselectedLabelColor: Colors.white,
-          labelStyle: const TextStyle(fontSize: 18),
+          unselectedLabelColor: Colors.white70,
+          labelStyle: const TextStyle(fontSize: 16, fontWeight: FontWeight.w600),
+          unselectedLabelStyle: const TextStyle(fontSize: 16, fontWeight: FontWeight.w500),
           tabs: [
             Tab(text: t(context, 'daily')),
             Tab(text: t(context, 'weekly')),
@@ -744,12 +782,12 @@ class _HomePageState extends State<HomePage> with SingleTickerProviderStateMixin
         ],
       ),
       floatingActionButton: SizedBox(
-        width: 76,
-        height: 76,
+        width: 62,
+        height: 62,
         child: FloatingActionButton(
           shape: const CircleBorder(),
           onPressed: widget.onCreate,
-          child: const Icon(Icons.add, size: 40),
+          child: const Icon(Icons.add, size: 32),
         ),
       ),
     );
@@ -784,13 +822,25 @@ class SummaryStrip extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Container(
-      color: Colors.white,
-      padding: const EdgeInsets.symmetric(vertical: 16),
+      margin: const EdgeInsets.fromLTRB(12, 12, 12, 8),
+      padding: const EdgeInsets.symmetric(vertical: 14, horizontal: 10),
+      decoration: BoxDecoration(
+        color: surface,
+        borderRadius: BorderRadius.circular(8),
+        border: Border.all(color: lineColor),
+        boxShadow: const [
+          BoxShadow(
+            color: Color(0x14000000),
+            blurRadius: 12,
+            offset: Offset(0, 5),
+          ),
+        ],
+      ),
       child: Row(
         children: [
-          SummaryItem(title: t(context, 'income'), value: income, color: incomeGreen),
-          SummaryItem(title: t(context, 'expense'), value: expense, color: expenseRed),
-          SummaryItem(title: t(context, 'balance'), value: balance, color: Colors.black87),
+          SummaryItem(title: t(context, 'income'), value: income, color: incomeGreen, icon: Icons.south_west),
+          SummaryItem(title: t(context, 'expense'), value: expense, color: expenseRed, icon: Icons.north_east),
+          SummaryItem(title: t(context, 'balance'), value: balance, color: brandDark, icon: Icons.account_balance_wallet_outlined),
         ],
       ),
     );
@@ -803,22 +853,41 @@ class SummaryItem extends StatelessWidget {
     required this.title,
     required this.value,
     required this.color,
+    required this.icon,
   });
 
   final String title;
   final int value;
   final Color color;
+  final IconData icon;
 
   @override
   Widget build(BuildContext context) {
     return Expanded(
       child: Column(
         children: [
-          Text(title, style: const TextStyle(fontSize: 19, color: Color(0xFF555555))),
-          const SizedBox(height: 4),
+          Container(
+            width: 32,
+            height: 32,
+            decoration: BoxDecoration(
+              color: color.withValues(alpha: 0.11),
+              borderRadius: BorderRadius.circular(8),
+            ),
+            child: Icon(icon, size: 18, color: color),
+          ),
+          const SizedBox(height: 8),
+          Text(
+            title,
+            maxLines: 1,
+            overflow: TextOverflow.ellipsis,
+            style: const TextStyle(fontSize: 13.5, color: textMuted, fontWeight: FontWeight.w500),
+          ),
+          const SizedBox(height: 5),
           Text(
             value == 0 ? '0' : money(value),
-            style: TextStyle(fontSize: 18, color: color, fontWeight: FontWeight.w500),
+            maxLines: 1,
+            overflow: TextOverflow.ellipsis,
+            style: TextStyle(fontSize: 16, color: color, fontWeight: FontWeight.w700),
           ),
         ],
       ),
@@ -847,9 +916,9 @@ class DailyView extends StatelessWidget {
     }
 
     return ListView.separated(
-      padding: const EdgeInsets.only(bottom: 120),
+      padding: const EdgeInsets.fromLTRB(12, 4, 12, 120),
       itemCount: transactions.length,
-      separatorBuilder: (context, index) => const Divider(height: 1),
+      separatorBuilder: (context, index) => const SizedBox(height: 8),
       itemBuilder: (context, index) {
         final tx = transactions[index];
         return Dismissible(
@@ -863,21 +932,67 @@ class DailyView extends StatelessWidget {
           ),
           confirmDismiss: (_) => confirm(context, t(context, 'deleteTransaction')),
           onDismissed: (_) => onDelete(tx.id),
-          child: ListTile(
-            tileColor: Colors.white,
-            onTap: () => onEdit(tx),
-            leading: CircleAvatar(
-              backgroundColor: tx.isIncome ? incomeGreen : expenseRed,
-              child: Icon(tx.isIncome ? Icons.arrow_downward : Icons.arrow_upward, color: Colors.white),
-            ),
-            title: Text(tx.category, style: const TextStyle(fontSize: 18)),
-            subtitle: Text('${formatDate(tx.date)}${tx.note.isEmpty ? '' : ' - ${tx.note}'}'),
-            trailing: Text(
-              money(tx.amount),
-              style: TextStyle(
-                color: tx.isIncome ? incomeGreen : expenseRed,
-                fontSize: 18,
-                fontWeight: FontWeight.w600,
+          child: Material(
+            color: surface,
+            borderRadius: BorderRadius.circular(8),
+            child: InkWell(
+              borderRadius: BorderRadius.circular(8),
+              onTap: () => onEdit(tx),
+              child: Container(
+                padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
+                decoration: BoxDecoration(
+                  borderRadius: BorderRadius.circular(8),
+                  border: Border.all(color: lineColor),
+                ),
+                child: Row(
+                  children: [
+                    Container(
+                      width: 42,
+                      height: 42,
+                      decoration: BoxDecoration(
+                        color: (tx.isIncome ? incomeGreen : expenseRed).withValues(alpha: 0.12),
+                        borderRadius: BorderRadius.circular(8),
+                      ),
+                      child: Icon(
+                        tx.isIncome ? Icons.south_west : Icons.north_east,
+                        color: tx.isIncome ? incomeGreen : expenseRed,
+                        size: 22,
+                      ),
+                    ),
+                    const SizedBox(width: 12),
+                    Expanded(
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Text(
+                            tx.category,
+                            maxLines: 1,
+                            overflow: TextOverflow.ellipsis,
+                            style: const TextStyle(fontSize: 16.5, fontWeight: FontWeight.w700, color: textPrimary),
+                          ),
+                          const SizedBox(height: 4),
+                          Text(
+                            '${formatDate(tx.date)}${tx.note.isEmpty ? '' : ' - ${tx.note}'}',
+                            maxLines: 1,
+                            overflow: TextOverflow.ellipsis,
+                            style: const TextStyle(fontSize: 13.5, color: textMuted),
+                          ),
+                        ],
+                      ),
+                    ),
+                    const SizedBox(width: 10),
+                    Text(
+                      money(tx.amount),
+                      maxLines: 1,
+                      overflow: TextOverflow.ellipsis,
+                      style: TextStyle(
+                        color: tx.isIncome ? incomeGreen : expenseRed,
+                        fontSize: 15.5,
+                        fontWeight: FontWeight.w800,
+                      ),
+                    ),
+                  ],
+                ),
               ),
             ),
           ),
@@ -994,41 +1109,56 @@ class PeriodRows extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return ListView.separated(
-      padding: const EdgeInsets.only(bottom: 120),
+      padding: const EdgeInsets.fromLTRB(12, 4, 12, 120),
       itemCount: rows.length,
-      separatorBuilder: (context, index) => const Divider(height: 1),
+      separatorBuilder: (context, index) => const SizedBox(height: 8),
       itemBuilder: (_, index) {
         final row = rows[index];
         return Container(
-          color: Colors.white,
-          padding: const EdgeInsets.symmetric(horizontal: 30, vertical: 14),
+          padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 13),
+          decoration: BoxDecoration(
+            color: surface,
+            borderRadius: BorderRadius.circular(8),
+            border: Border.all(color: lineColor),
+          ),
           child: Row(
             children: [
               SizedBox(
-                width: 190,
+                width: 135,
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
                     if (row.label != null)
-                      Center(
-                        widthFactor: 1.8,
-                        child: Text(row.label!, style: const TextStyle(fontSize: 17, color: Color(0xFF555555))),
+                      Padding(
+                        padding: const EdgeInsets.only(left: 2, bottom: 5),
+                        child: Text(row.label!, style: const TextStyle(fontSize: 13, color: textMuted, fontWeight: FontWeight.w600)),
                       ),
                     Container(
-                      padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 8),
+                      padding: const EdgeInsets.symmetric(horizontal: 13, vertical: 7),
                       decoration: BoxDecoration(
-                        color: row.selected ? const Color(0xFFFFB154) : const Color(0xFF8C8C8C),
-                        borderRadius: BorderRadius.circular(7),
+                        color: row.selected ? brandSoft : const Color(0xFFF0F2F5),
+                        borderRadius: BorderRadius.circular(8),
+                        border: Border.all(color: row.selected ? brandRed : lineColor),
                       ),
-                      child: Text(row.badge, style: const TextStyle(fontSize: 18, color: Colors.white)),
+                      child: Text(
+                        row.badge,
+                        maxLines: 1,
+                        overflow: TextOverflow.ellipsis,
+                        style: TextStyle(fontSize: 14.5, color: row.selected ? brandRed : textMuted, fontWeight: FontWeight.w700),
+                      ),
                     ),
                   ],
                 ),
               ),
               Expanded(
-                child: Text(money(row.income), style: const TextStyle(color: incomeGreen, fontSize: 18)),
+                child: Text(
+                  money(row.income),
+                  textAlign: TextAlign.right,
+                  style: const TextStyle(color: incomeGreen, fontSize: 15.5, fontWeight: FontWeight.w700),
+                ),
               ),
-              Text(money(row.expense), style: const TextStyle(color: expenseRed, fontSize: 18)),
+              const SizedBox(width: 24),
+              Text(money(row.expense), textAlign: TextAlign.right, style: const TextStyle(color: expenseRed, fontSize: 15.5, fontWeight: FontWeight.w700)),
             ],
           ),
         );
@@ -1107,7 +1237,9 @@ class _TransactionPageState extends State<TransactionPage> {
 
   InputDecoration get _compactInput => const InputDecoration(
         isDense: true,
-        contentPadding: EdgeInsets.symmetric(horizontal: 12, vertical: 11),
+        filled: true,
+        fillColor: surface,
+        contentPadding: EdgeInsets.symmetric(horizontal: 13, vertical: 12),
       );
 
   @override
@@ -1119,11 +1251,22 @@ class _TransactionPageState extends State<TransactionPage> {
         actions: const [Padding(padding: EdgeInsets.only(right: 16), child: Icon(Icons.copy_outlined, size: 26))],
       ),
       body: ListView(
-        padding: const EdgeInsets.fromLTRB(10, 10, 10, 30),
+        padding: const EdgeInsets.fromLTRB(12, 12, 12, 30),
         children: [
           Container(
-            color: Colors.white,
             padding: const EdgeInsets.fromLTRB(14, 14, 14, 18),
+            decoration: BoxDecoration(
+              color: surface,
+              borderRadius: BorderRadius.circular(8),
+              border: Border.all(color: lineColor),
+              boxShadow: const [
+                BoxShadow(
+                  color: Color(0x10000000),
+                  blurRadius: 12,
+                  offset: Offset(0, 5),
+                ),
+              ],
+            ),
             child: Column(
               children: [
                 SegmentedChoice(
@@ -1191,13 +1334,13 @@ class _TransactionPageState extends State<TransactionPage> {
               ],
             ),
           ),
-          const SizedBox(height: 28),
+          const SizedBox(height: 24),
           Center(
             child: SizedBox(
-              width: 168,
-              height: 48,
+              width: double.infinity,
+              height: 50,
               child: FilledButton(
-                style: FilledButton.styleFrom(backgroundColor: brandRed, shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(7))),
+                style: FilledButton.styleFrom(backgroundColor: brandRed, shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8))),
                 onPressed: _save,
                 child: Text(t(context, 'save'), style: const TextStyle(fontSize: 16, color: Colors.white)),
               ),
@@ -1271,11 +1414,11 @@ class FormRow extends StatelessWidget {
                 label,
                 maxLines: 2,
                 overflow: TextOverflow.ellipsis,
-                style: const TextStyle(fontSize: 16.5),
+                style: const TextStyle(fontSize: 15.5, color: textMuted, fontWeight: FontWeight.w600),
               ),
             ),
             Expanded(child: child),
-            if (trailing != null) SizedBox(width: 42, child: Center(child: trailing!)),
+            if (trailing != null) SizedBox(width: 40, child: Center(child: trailing!)),
           ],
         );
       },
@@ -1303,7 +1446,12 @@ class SegmentedChoice extends StatelessWidget {
   Widget build(BuildContext context) {
     return Container(
       height: 56,
-      decoration: BoxDecoration(color: const Color(0xFFE8EAED), borderRadius: BorderRadius.circular(8)),
+      padding: const EdgeInsets.all(4),
+      decoration: BoxDecoration(
+        color: const Color(0xFFF0F2F5),
+        borderRadius: BorderRadius.circular(8),
+        border: Border.all(color: lineColor),
+      ),
       child: Row(
         children: [
           Expanded(child: _button(left, selectedLeft, onLeft)),
@@ -1319,12 +1467,27 @@ class SegmentedChoice extends StatelessWidget {
       child: AnimatedContainer(
         duration: const Duration(milliseconds: 160),
         alignment: Alignment.center,
-        decoration: BoxDecoration(color: selected ? brandRed : Colors.transparent, borderRadius: BorderRadius.circular(8)),
+        decoration: BoxDecoration(
+          color: selected ? brandRed : Colors.transparent,
+          borderRadius: BorderRadius.circular(6),
+          boxShadow: selected
+              ? const [
+                  BoxShadow(
+                    color: Color(0x22000000),
+                    blurRadius: 8,
+                    offset: Offset(0, 3),
+                  ),
+                ]
+              : null,
+        ),
         child: FittedBox(
           fit: BoxFit.scaleDown,
           child: Padding(
             padding: const EdgeInsets.symmetric(horizontal: 8),
-            child: Text(text, style: TextStyle(fontSize: 18, color: selected ? Colors.white : Colors.black87)),
+            child: Text(
+              text,
+              style: TextStyle(fontSize: 16.5, fontWeight: FontWeight.w700, color: selected ? Colors.white : textMuted),
+            ),
           ),
         ),
       ),
@@ -1355,11 +1518,31 @@ class AppMenu extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Drawer(
-      width: MediaQuery.of(context).size.width * 0.7,
+      width: min<double>(MediaQuery.of(context).size.width * 0.78, 340),
       child: SafeArea(
         child: ListView(
-          padding: const EdgeInsets.symmetric(vertical: 24),
+          padding: const EdgeInsets.fromLTRB(14, 16, 14, 24),
           children: [
+            Padding(
+              padding: const EdgeInsets.fromLTRB(8, 0, 8, 18),
+              child: Row(
+                children: [
+                  ClipRRect(
+                    borderRadius: BorderRadius.circular(8),
+                    child: Image.asset('assets/icons/app_icon.png', width: 48, height: 48),
+                  ),
+                  const SizedBox(width: 12),
+                  const Expanded(
+                    child: Text(
+                      appName,
+                      maxLines: 2,
+                      overflow: TextOverflow.ellipsis,
+                      style: TextStyle(fontSize: 17, fontWeight: FontWeight.w800, color: textPrimary),
+                    ),
+                  ),
+                ],
+              ),
+            ),
             DrawerItem(icon: Icons.search, color: Colors.orange, title: t(context, 'search'), onTap: () => onNavigate(SearchPage(transactions: transactions, categories: [...expenseCategories, ...incomeCategories], onEdit: (_) {}))),
             DrawerItem(icon: Icons.pie_chart_outline, color: Colors.purple.shade300, title: t(context, 'chart'), onTap: () => onNavigate(GraphPage(transactions: transactions))),
             DrawerItem(icon: Icons.assignment_outlined, color: Colors.red.shade300, title: t(context, 'category'), onTap: () => onNavigate(CategoryPage(expenseCategories: expenseCategories, incomeCategories: incomeCategories, onSaveCategories: onSaveCategories))),
@@ -1390,14 +1573,44 @@ class DrawerItem extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return ListTile(
-      contentPadding: const EdgeInsets.symmetric(horizontal: 36, vertical: 9),
-      leading: Icon(icon, color: color, size: 31),
-      title: Text(title, style: const TextStyle(fontSize: 19, color: Color(0xFF5A5A5A))),
-      onTap: () {
-        Navigator.pop(context);
-        onTap();
-      },
+    return Padding(
+      padding: const EdgeInsets.only(bottom: 6),
+      child: Material(
+        color: Colors.transparent,
+        borderRadius: BorderRadius.circular(8),
+        child: InkWell(
+          borderRadius: BorderRadius.circular(8),
+          onTap: () {
+            Navigator.pop(context);
+            onTap();
+          },
+          child: Padding(
+            padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 10),
+            child: Row(
+              children: [
+                Container(
+                  width: 38,
+                  height: 38,
+                  decoration: BoxDecoration(
+                    color: color.withValues(alpha: 0.12),
+                    borderRadius: BorderRadius.circular(8),
+                  ),
+                  child: Icon(icon, color: color, size: 22),
+                ),
+                const SizedBox(width: 12),
+                Expanded(
+                  child: Text(
+                    title,
+                    maxLines: 1,
+                    overflow: TextOverflow.ellipsis,
+                    style: const TextStyle(fontSize: 16.5, fontWeight: FontWeight.w700, color: textPrimary),
+                  ),
+                ),
+              ],
+            ),
+          ),
+        ),
+      ),
     );
   }
 }
@@ -1838,13 +2051,50 @@ class SettingsTile extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return ListTile(
-      tileColor: Colors.white,
-      contentPadding: const EdgeInsets.symmetric(horizontal: 24, vertical: 5),
-      title: Text(title, style: const TextStyle(fontSize: 18.5, color: Color(0xFF222222))),
-      subtitle: subtitle == null ? null : Text(subtitle!, style: const TextStyle(fontSize: 17, color: expenseRed)),
-      trailing: onTap == null ? null : const Icon(Icons.chevron_right, size: 28),
-      onTap: onTap,
+    return Padding(
+      padding: const EdgeInsets.fromLTRB(12, 4, 12, 4),
+      child: Material(
+        color: surface,
+        borderRadius: BorderRadius.circular(8),
+        child: InkWell(
+          borderRadius: BorderRadius.circular(8),
+          onTap: onTap,
+          child: Container(
+            padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
+            decoration: BoxDecoration(
+              border: Border.all(color: lineColor),
+              borderRadius: BorderRadius.circular(8),
+            ),
+            child: Row(
+              children: [
+                Expanded(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text(
+                        title,
+                        maxLines: 1,
+                        overflow: TextOverflow.ellipsis,
+                        style: const TextStyle(fontSize: 16.5, fontWeight: FontWeight.w700, color: textPrimary),
+                      ),
+                      if (subtitle != null) ...[
+                        const SizedBox(height: 4),
+                        Text(
+                          subtitle!,
+                          maxLines: 1,
+                          overflow: TextOverflow.ellipsis,
+                          style: const TextStyle(fontSize: 14.5, color: brandRed, fontWeight: FontWeight.w600),
+                        ),
+                      ],
+                    ],
+                  ),
+                ),
+                if (onTap != null) const Icon(Icons.chevron_right, size: 24, color: textMuted),
+              ],
+            ),
+          ),
+        ),
+      ),
     );
   }
 }
