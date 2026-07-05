@@ -5,6 +5,7 @@ import 'dart:math';
 import 'package:file_picker/file_picker.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
+import 'package:flutter_localizations/flutter_localizations.dart';
 import 'package:intl/intl.dart';
 import 'package:path_provider/path_provider.dart';
 import 'package:share_plus/share_plus.dart';
@@ -19,6 +20,213 @@ const pageBg = Color(0xFFF0F0F0);
 const storageTransactionsKey = 'transactions_v1';
 const storageExpenseCategoriesKey = 'expense_categories_v1';
 const storageIncomeCategoriesKey = 'income_categories_v1';
+const storageLanguageKey = 'language_code_v1';
+
+const supportedLanguages = [
+  AppLanguage('system', 'System', 'Sistem'),
+  AppLanguage('id', 'Indonesia', 'Indonesia'),
+  AppLanguage('en', 'English', 'English'),
+  AppLanguage('ms', 'Melayu', 'Malay'),
+  AppLanguage('ar', 'العربية', 'Arabic'),
+  AppLanguage('de', 'Deutsch', 'German'),
+  AppLanguage('es', 'Español', 'Spanish'),
+  AppLanguage('fr', 'Français', 'French'),
+  AppLanguage('hi', 'हिन्दी', 'Hindi'),
+  AppLanguage('it', 'Italiano', 'Italian'),
+  AppLanguage('ja', '日本語', 'Japanese'),
+  AppLanguage('ko', '한국어', 'Korean'),
+  AppLanguage('nl', 'Nederlands', 'Dutch'),
+  AppLanguage('pt', 'Português', 'Portuguese'),
+  AppLanguage('ru', 'Русский', 'Russian'),
+  AppLanguage('th', 'ไทย', 'Thai'),
+  AppLanguage('tr', 'Türkçe', 'Turkish'),
+  AppLanguage('vi', 'Tiếng Việt', 'Vietnamese'),
+  AppLanguage('zh', '中文', 'Chinese'),
+];
+
+const appText = {
+  'id': {
+    'daily': 'Harian',
+    'weekly': 'Mingguan',
+    'monthly': 'Bulanan',
+    'yearly': 'Tahunan',
+    'income': 'Pemasukan',
+    'expense': 'Pengeluaran',
+    'balance': 'Saldo',
+    'noData': 'Data tidak tersedia',
+    'createTransaction': 'Buat Transaksi',
+    'date': 'Tanggal',
+    'category': 'Kategori',
+    'amount': 'Jumlah',
+    'note': 'Keterangan',
+    'save': 'SIMPAN',
+    'settings': 'Pengaturan',
+    'selectLanguage': 'Pilih Bahasa',
+    'language': 'Bahasa',
+    'search': 'Pencarian',
+    'chart': 'Grafik',
+    'rate': 'Beri Penilaian',
+    'help': 'Bantuan',
+    'about': 'Tentang',
+    'export': 'Ekspor',
+    'allCategories': 'Semua Kategori',
+    'keyword': 'Kata Kunci',
+    'min': 'Min',
+    'max': 'Max',
+    'cancel': 'BATAL',
+    'confirmExport': 'EKSPOR',
+    'backupDrive': 'Backup/Restore di Google Drive',
+    'backupStorage': 'Backup/Restore di Device Storage',
+    'shareDatabase': 'Kirim File Database',
+    'resetData': 'Setel Ulang Data',
+    'inactive': 'Tidak Aktif',
+    'themeColor': 'Atur Warna Tema',
+    'currencyFormat': 'Format Mata Uang',
+    'openingBalance': 'Atur Saldo Bawaan',
+    'removeAds': 'Hapus Iklan',
+    'transactionTime': 'Waktu/Jam Transaksi',
+    'firstWeekday': 'Hari Pertama Mingguan',
+    'firstMonthDate': 'Tanggal Pertama Bulanan',
+    'reminder': 'Pengingat',
+    'pin': 'Atur PIN',
+    'quickOpen': 'Buka Cepat',
+    'systemLanguage': 'Sistem',
+    'backupSaved': 'Backup tersimpan.',
+    'backupCancelled': 'Backup dibatalkan.',
+    'restoreDone': 'Data berhasil dipulihkan.',
+    'amountRequired': 'Jumlah harus diisi.',
+    'deleteTransaction': 'Hapus transaksi ini?',
+    'deleteCategory': 'Hapus kategori ini?',
+    'addCategory': 'Tambah Kategori',
+    'editCategory': 'Edit Kategori',
+  },
+  'en': {
+    'daily': 'Daily',
+    'weekly': 'Weekly',
+    'monthly': 'Monthly',
+    'yearly': 'Yearly',
+    'income': 'Income',
+    'expense': 'Expense',
+    'balance': 'Balance',
+    'noData': 'No data available',
+    'createTransaction': 'Create Transaction',
+    'date': 'Date',
+    'category': 'Category',
+    'amount': 'Amount',
+    'note': 'Note',
+    'save': 'SAVE',
+    'settings': 'Settings',
+    'selectLanguage': 'Select Language',
+    'language': 'Language',
+    'search': 'Search',
+    'chart': 'Chart',
+    'rate': 'Rate App',
+    'help': 'Help',
+    'about': 'About',
+    'export': 'Export',
+    'allCategories': 'All Categories',
+    'keyword': 'Keyword',
+    'min': 'Min',
+    'max': 'Max',
+    'cancel': 'CANCEL',
+    'confirmExport': 'EXPORT',
+    'backupDrive': 'Backup/Restore on Google Drive',
+    'backupStorage': 'Backup/Restore on Device Storage',
+    'shareDatabase': 'Send Database File',
+    'resetData': 'Reset Data',
+    'inactive': 'Inactive',
+    'themeColor': 'Theme Color',
+    'currencyFormat': 'Currency Format',
+    'openingBalance': 'Opening Balance',
+    'removeAds': 'Remove Ads',
+    'transactionTime': 'Transaction Time',
+    'firstWeekday': 'First Day of Week',
+    'firstMonthDate': 'First Day of Month',
+    'reminder': 'Reminder',
+    'pin': 'Set PIN',
+    'quickOpen': 'Quick Open',
+    'systemLanguage': 'System',
+    'backupSaved': 'Backup saved.',
+    'backupCancelled': 'Backup cancelled.',
+    'restoreDone': 'Data restored.',
+    'amountRequired': 'Amount is required.',
+    'deleteTransaction': 'Delete this transaction?',
+    'deleteCategory': 'Delete this category?',
+    'addCategory': 'Add Category',
+    'editCategory': 'Edit Category',
+  },
+  'ms': {
+    'income': 'Pendapatan',
+    'expense': 'Perbelanjaan',
+    'save': 'SIMPAN',
+    'settings': 'Tetapan',
+    'selectLanguage': 'Pilih Bahasa',
+  },
+  'es': {
+    'income': 'Ingresos',
+    'expense': 'Gastos',
+    'save': 'GUARDAR',
+    'settings': 'Ajustes',
+    'selectLanguage': 'Idioma',
+  },
+  'fr': {
+    'income': 'Revenus',
+    'expense': 'Depenses',
+    'save': 'ENREGISTRER',
+    'settings': 'Parametres',
+    'selectLanguage': 'Langue',
+  },
+  'de': {
+    'income': 'Einnahmen',
+    'expense': 'Ausgaben',
+    'save': 'SPEICHERN',
+    'settings': 'Einstellungen',
+    'selectLanguage': 'Sprache',
+  },
+  'pt': {
+    'income': 'Receitas',
+    'expense': 'Despesas',
+    'save': 'SALVAR',
+    'settings': 'Configuracoes',
+    'selectLanguage': 'Idioma',
+  },
+  'ar': {
+    'income': 'الدخل',
+    'expense': 'المصروفات',
+    'save': 'حفظ',
+    'settings': 'الإعدادات',
+    'selectLanguage': 'اللغة',
+  },
+  'ja': {
+    'income': '収入',
+    'expense': '支出',
+    'save': '保存',
+    'settings': '設定',
+    'selectLanguage': '言語',
+  },
+  'ko': {
+    'income': '수입',
+    'expense': '지출',
+    'save': '저장',
+    'settings': '설정',
+    'selectLanguage': '언어',
+  },
+  'zh': {
+    'income': '收入',
+    'expense': '支出',
+    'save': '保存',
+    'settings': '设置',
+    'selectLanguage': '语言',
+  },
+};
+
+class AppLanguage {
+  const AppLanguage(this.code, this.nativeName, this.englishName);
+
+  final String code;
+  final String nativeName;
+  final String englishName;
+}
 
 const monthNames = [
   'Jan',
@@ -76,42 +284,116 @@ void main() {
   runApp(const FinanceApp());
 }
 
-class FinanceApp extends StatelessWidget {
+class FinanceApp extends StatefulWidget {
   const FinanceApp({super.key});
 
   @override
+  State<FinanceApp> createState() => _FinanceAppState();
+}
+
+class _FinanceAppState extends State<FinanceApp> {
+  String _languageCode = 'id';
+
+  @override
+  void initState() {
+    super.initState();
+    _loadLanguage();
+  }
+
+  Future<void> _loadLanguage() async {
+    final prefs = await SharedPreferences.getInstance();
+    setState(() => _languageCode = prefs.getString(storageLanguageKey) ?? 'id');
+  }
+
+  Future<void> _setLanguage(String code) async {
+    final prefs = await SharedPreferences.getInstance();
+    await prefs.setString(storageLanguageKey, code);
+    setState(() => _languageCode = code);
+  }
+
+  @override
   Widget build(BuildContext context) {
-    return MaterialApp(
-      title: appName,
-      debugShowCheckedModeBanner: false,
-      theme: ThemeData(
-        colorScheme: ColorScheme.fromSeed(seedColor: brandRed),
-        scaffoldBackgroundColor: pageBg,
-        fontFamily: 'Roboto',
-        appBarTheme: const AppBarTheme(
-          backgroundColor: brandRed,
-          foregroundColor: Colors.white,
-          elevation: 1,
-          centerTitle: false,
-          titleTextStyle: TextStyle(fontSize: 24, fontWeight: FontWeight.w400),
-          iconTheme: IconThemeData(color: Colors.white, size: 30),
-        ),
-        floatingActionButtonTheme: const FloatingActionButtonThemeData(
-          backgroundColor: brandRed,
-          foregroundColor: Colors.white,
-          elevation: 7,
-        ),
-        inputDecorationTheme: const InputDecorationTheme(
-          border: OutlineInputBorder(),
-          focusedBorder: OutlineInputBorder(
-            borderSide: BorderSide(color: brandRed, width: 1.5),
+    final locale = _languageCode == 'system' ? null : Locale(_languageCode);
+    return AppLocaleScope(
+      languageCode: _languageCode,
+      setLanguage: _setLanguage,
+      child: MaterialApp(
+        title: appName,
+        debugShowCheckedModeBanner: false,
+        locale: locale,
+        supportedLocales: supportedLanguages
+            .where((language) => language.code != 'system')
+            .map((language) => Locale(language.code))
+            .toList(),
+        localizationsDelegates: const [
+          GlobalMaterialLocalizations.delegate,
+          GlobalCupertinoLocalizations.delegate,
+          GlobalWidgetsLocalizations.delegate,
+        ],
+        theme: ThemeData(
+          colorScheme: ColorScheme.fromSeed(seedColor: brandRed),
+          scaffoldBackgroundColor: pageBg,
+          fontFamily: 'Roboto',
+          appBarTheme: const AppBarTheme(
+            backgroundColor: brandRed,
+            foregroundColor: Colors.white,
+            elevation: 1,
+            centerTitle: false,
+            titleTextStyle: TextStyle(fontSize: 22, fontWeight: FontWeight.w400),
+            iconTheme: IconThemeData(color: Colors.white, size: 28),
           ),
+          floatingActionButtonTheme: const FloatingActionButtonThemeData(
+            backgroundColor: brandRed,
+            foregroundColor: Colors.white,
+            elevation: 7,
+          ),
+          inputDecorationTheme: const InputDecorationTheme(
+            border: OutlineInputBorder(),
+            focusedBorder: OutlineInputBorder(
+              borderSide: BorderSide(color: brandRed, width: 1.5),
+            ),
+          ),
+          useMaterial3: true,
         ),
-        useMaterial3: true,
+        home: const AppShell(),
       ),
-      home: const AppShell(),
     );
   }
+}
+
+class AppLocaleScope extends InheritedWidget {
+  const AppLocaleScope({
+    super.key,
+    required this.languageCode,
+    required this.setLanguage,
+    required super.child,
+  });
+
+  final String languageCode;
+  final Future<void> Function(String code) setLanguage;
+
+  static AppLocaleScope of(BuildContext context) {
+    return context.dependOnInheritedWidgetOfExactType<AppLocaleScope>()!;
+  }
+
+  @override
+  bool updateShouldNotify(AppLocaleScope oldWidget) {
+    return oldWidget.languageCode != languageCode;
+  }
+}
+
+String t(BuildContext context, String key) {
+  final code = AppLocaleScope.of(context).languageCode;
+  final activeCode = code == 'system'
+      ? Localizations.localeOf(context).languageCode
+      : code;
+  return appText[activeCode]?[key] ?? appText['en']?[key] ?? appText['id']?[key] ?? key;
+}
+
+String languageName(String code) {
+  return supportedLanguages
+      .firstWhere((language) => language.code == code, orElse: () => supportedLanguages.first)
+      .nativeName;
 }
 
 class AppShell extends StatefulWidget {
@@ -377,7 +659,7 @@ class _HomePageState extends State<HomePage> with SingleTickerProviderStateMixin
         title: Text(periodTitle(_anchor, _tabController.index)),
         actions: [
           IconButton(
-            tooltip: 'Ekspor',
+            tooltip: t(context, 'export'),
             onPressed: () => showExportDialog(context, widget.transactions),
             icon: const Icon(Icons.file_download),
           ),
@@ -387,7 +669,7 @@ class _HomePageState extends State<HomePage> with SingleTickerProviderStateMixin
             icon: const Icon(Icons.sort),
           ),
           IconButton(
-            tooltip: 'Pencarian',
+            tooltip: t(context, 'search'),
             onPressed: () => Navigator.of(context).push(
               MaterialPageRoute(
                 builder: (_) => SearchPage(
@@ -413,12 +695,12 @@ class _HomePageState extends State<HomePage> with SingleTickerProviderStateMixin
           indicatorWeight: 5,
           labelColor: Colors.white,
           unselectedLabelColor: Colors.white,
-          labelStyle: const TextStyle(fontSize: 20),
-          tabs: const [
-            Tab(text: 'Harian'),
-            Tab(text: 'Mingguan'),
-            Tab(text: 'Bulanan'),
-            Tab(text: 'Tahunan'),
+          labelStyle: const TextStyle(fontSize: 18),
+          tabs: [
+            Tab(text: t(context, 'daily')),
+            Tab(text: t(context, 'weekly')),
+            Tab(text: t(context, 'monthly')),
+            Tab(text: t(context, 'yearly')),
           ],
         ),
       ),
@@ -506,9 +788,9 @@ class SummaryStrip extends StatelessWidget {
       padding: const EdgeInsets.symmetric(vertical: 16),
       child: Row(
         children: [
-          SummaryItem(title: 'Pemasukan', value: income, color: incomeGreen),
-          SummaryItem(title: 'Pengeluaran', value: expense, color: expenseRed),
-          SummaryItem(title: 'Saldo', value: balance, color: Colors.black87),
+          SummaryItem(title: t(context, 'income'), value: income, color: incomeGreen),
+          SummaryItem(title: t(context, 'expense'), value: expense, color: expenseRed),
+          SummaryItem(title: t(context, 'balance'), value: balance, color: Colors.black87),
         ],
       ),
     );
@@ -579,7 +861,7 @@ class DailyView extends StatelessWidget {
             padding: const EdgeInsets.only(right: 24),
             child: const Icon(Icons.delete, color: Colors.white),
           ),
-          confirmDismiss: (_) => confirm(context, 'Hapus transaksi ini?'),
+          confirmDismiss: (_) => confirm(context, t(context, 'deleteTransaction')),
           onDismissed: (_) => onDelete(tx.id),
           child: ListTile(
             tileColor: Colors.white,
@@ -610,13 +892,13 @@ class EmptyState extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return const Center(
+    return Center(
       child: Column(
         mainAxisSize: MainAxisSize.min,
         children: [
           Icon(Icons.description_outlined, size: 72, color: Color(0xFFD5D5D5)),
           SizedBox(height: 16),
-          Text('Data tidak tersedia', style: TextStyle(fontSize: 20, color: Color(0xFFB0B0B0))),
+          Text(t(context, 'noData'), style: const TextStyle(fontSize: 20, color: Color(0xFFB0B0B0))),
         ],
       ),
     );
@@ -823,45 +1105,50 @@ class _TransactionPageState extends State<TransactionPage> {
 
   List<String> get _categories => _type == 'expense' ? widget.expenseCategories : widget.incomeCategories;
 
+  InputDecoration get _compactInput => const InputDecoration(
+        isDense: true,
+        contentPadding: EdgeInsets.symmetric(horizontal: 12, vertical: 11),
+      );
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
         leading: IconButton(icon: const Icon(Icons.arrow_back), onPressed: () => Navigator.pop(context)),
-        title: const Text('Buat Transaksi'),
-        actions: const [Padding(padding: EdgeInsets.only(right: 22), child: Icon(Icons.copy_outlined))],
+        title: Text(t(context, 'createTransaction')),
+        actions: const [Padding(padding: EdgeInsets.only(right: 16), child: Icon(Icons.copy_outlined, size: 26))],
       ),
       body: ListView(
-        padding: const EdgeInsets.fromLTRB(10, 12, 10, 30),
+        padding: const EdgeInsets.fromLTRB(10, 10, 10, 30),
         children: [
           Container(
             color: Colors.white,
-            padding: const EdgeInsets.all(20),
+            padding: const EdgeInsets.fromLTRB(14, 14, 14, 18),
             child: Column(
               children: [
                 SegmentedChoice(
-                  left: 'Pengeluaran',
-                  right: 'Pemasukan',
+                  left: t(context, 'expense'),
+                  right: t(context, 'income'),
                   selectedLeft: _type == 'expense',
                   onLeft: () => _changeType('expense'),
                   onRight: () => _changeType('income'),
                 ),
-                const SizedBox(height: 28),
+                const SizedBox(height: 18),
                 FormRow(
-                  label: 'Tanggal',
+                  label: t(context, 'date'),
                   child: InkWell(
                     onTap: _pickDate,
                     child: InputDecorator(
-                      decoration: const InputDecoration(),
-                      child: Text(formatDate(_date), style: const TextStyle(fontSize: 22)),
+                      decoration: _compactInput,
+                      child: Text(formatDate(_date), style: const TextStyle(fontSize: 17)),
                     ),
                   ),
                 ),
-                const SizedBox(height: 20),
+                const SizedBox(height: 14),
                 FormRow(
-                  label: 'Kategori',
+                  label: t(context, 'category'),
                   trailing: IconButton(
-                    icon: const Icon(Icons.edit, color: Color(0xFF8B8B8B), size: 32),
+                    icon: const Icon(Icons.edit, color: Color(0xFF8B8B8B), size: 24),
                     onPressed: () => Navigator.of(context).push(MaterialPageRoute(
                       builder: (_) => CategoryPage(
                         expenseCategories: widget.expenseCategories,
@@ -876,42 +1163,43 @@ class _TransactionPageState extends State<TransactionPage> {
                     items: _categories.map((cat) => DropdownMenuItem(value: cat, child: Text(cat))).toList(),
                     onChanged: (value) => setState(() => _category = value ?? _category),
                     iconEnabledColor: brandRed,
-                    style: const TextStyle(fontSize: 22, color: Colors.black87),
+                    style: const TextStyle(fontSize: 17, color: Colors.black87),
+                    decoration: _compactInput,
                   ),
                 ),
-                const SizedBox(height: 20),
+                const SizedBox(height: 14),
                 FormRow(
-                  label: 'Jumlah',
-                  trailing: const Icon(Icons.calculate, color: Color(0xFF8B8B8B), size: 34),
+                  label: t(context, 'amount'),
+                  trailing: const Icon(Icons.calculate, color: Color(0xFF8B8B8B), size: 25),
                   child: TextField(
                     controller: _amountController,
                     keyboardType: TextInputType.number,
                     inputFormatters: [FilteringTextInputFormatter.digitsOnly],
-                    style: const TextStyle(fontSize: 22),
-                    decoration: const InputDecoration(),
+                    style: const TextStyle(fontSize: 17),
+                    decoration: _compactInput,
                   ),
                 ),
-                const SizedBox(height: 20),
+                const SizedBox(height: 14),
                 FormRow(
-                  label: 'Keterangan',
+                  label: t(context, 'note'),
                   child: TextField(
                     controller: _noteController,
-                    style: const TextStyle(fontSize: 22),
-                    decoration: const InputDecoration(),
+                    style: const TextStyle(fontSize: 17),
+                    decoration: _compactInput,
                   ),
                 ),
               ],
             ),
           ),
-          const SizedBox(height: 48),
+          const SizedBox(height: 28),
           Center(
             child: SizedBox(
-              width: 240,
-              height: 64,
+              width: 168,
+              height: 48,
               child: FilledButton(
                 style: FilledButton.styleFrom(backgroundColor: brandRed, shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(7))),
                 onPressed: _save,
-                child: const Text('SIMPAN', style: TextStyle(fontSize: 20, color: Colors.white)),
+                child: Text(t(context, 'save'), style: const TextStyle(fontSize: 16, color: Colors.white)),
               ),
             ),
           ),
@@ -941,7 +1229,7 @@ class _TransactionPageState extends State<TransactionPage> {
   Future<void> _save() async {
     final amount = int.tryParse(_amountController.text) ?? 0;
     if (amount <= 0) {
-      showSnack(context, 'Jumlah harus diisi.');
+      showSnack(context, t(context, 'amountRequired'));
       return;
     }
     await widget.onSave(
@@ -972,12 +1260,25 @@ class FormRow extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return Row(
-      children: [
-        SizedBox(width: 220, child: Text(label, style: const TextStyle(fontSize: 22))),
-        Expanded(child: child),
-        if (trailing != null) SizedBox(width: 62, child: Center(child: trailing!)),
-      ],
+    return LayoutBuilder(
+      builder: (context, constraints) {
+        final labelWidth = constraints.maxWidth < 390 ? 96.0 : 118.0;
+        return Row(
+          children: [
+            SizedBox(
+              width: labelWidth,
+              child: Text(
+                label,
+                maxLines: 2,
+                overflow: TextOverflow.ellipsis,
+                style: const TextStyle(fontSize: 16.5),
+              ),
+            ),
+            Expanded(child: child),
+            if (trailing != null) SizedBox(width: 42, child: Center(child: trailing!)),
+          ],
+        );
+      },
     );
   }
 }
@@ -1001,7 +1302,7 @@ class SegmentedChoice extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Container(
-      height: 84,
+      height: 56,
       decoration: BoxDecoration(color: const Color(0xFFE8EAED), borderRadius: BorderRadius.circular(8)),
       child: Row(
         children: [
@@ -1019,7 +1320,13 @@ class SegmentedChoice extends StatelessWidget {
         duration: const Duration(milliseconds: 160),
         alignment: Alignment.center,
         decoration: BoxDecoration(color: selected ? brandRed : Colors.transparent, borderRadius: BorderRadius.circular(8)),
-        child: Text(text, style: TextStyle(fontSize: 22, color: selected ? Colors.white : Colors.black87)),
+        child: FittedBox(
+          fit: BoxFit.scaleDown,
+          child: Padding(
+            padding: const EdgeInsets.symmetric(horizontal: 8),
+            child: Text(text, style: TextStyle(fontSize: 18, color: selected ? Colors.white : Colors.black87)),
+          ),
+        ),
       ),
     );
   }
@@ -1053,13 +1360,13 @@ class AppMenu extends StatelessWidget {
         child: ListView(
           padding: const EdgeInsets.symmetric(vertical: 24),
           children: [
-            DrawerItem(icon: Icons.search, color: Colors.orange, title: 'Pencarian', onTap: () => onNavigate(SearchPage(transactions: transactions, categories: [...expenseCategories, ...incomeCategories], onEdit: (_) {}))),
-            DrawerItem(icon: Icons.pie_chart_outline, color: Colors.purple.shade300, title: 'Grafik', onTap: () => onNavigate(GraphPage(transactions: transactions))),
-            DrawerItem(icon: Icons.assignment_outlined, color: Colors.red.shade300, title: 'Kategori', onTap: () => onNavigate(CategoryPage(expenseCategories: expenseCategories, incomeCategories: incomeCategories, onSaveCategories: onSaveCategories))),
-            DrawerItem(icon: Icons.settings_outlined, color: Colors.lightBlue, title: 'Pengaturan', onTap: () => onNavigate(SettingsPage(onBackupPayload: onBackupPayload, onRestoreBackup: onRestoreBackup))),
-            DrawerItem(icon: Icons.star_border, color: Colors.amber, title: 'Beri Penilaian', onTap: () => showSnack(context, 'Terima kasih atas penilaiannya.')),
-            DrawerItem(icon: Icons.help_outline, color: Colors.green, title: 'Bantuan', onTap: () => onNavigate(const HelpPage())),
-            DrawerItem(icon: Icons.info_outline, color: Colors.teal.shade300, title: 'Tentang', onTap: () => onNavigate(const AboutPage())),
+            DrawerItem(icon: Icons.search, color: Colors.orange, title: t(context, 'search'), onTap: () => onNavigate(SearchPage(transactions: transactions, categories: [...expenseCategories, ...incomeCategories], onEdit: (_) {}))),
+            DrawerItem(icon: Icons.pie_chart_outline, color: Colors.purple.shade300, title: t(context, 'chart'), onTap: () => onNavigate(GraphPage(transactions: transactions))),
+            DrawerItem(icon: Icons.assignment_outlined, color: Colors.red.shade300, title: t(context, 'category'), onTap: () => onNavigate(CategoryPage(expenseCategories: expenseCategories, incomeCategories: incomeCategories, onSaveCategories: onSaveCategories))),
+            DrawerItem(icon: Icons.settings_outlined, color: Colors.lightBlue, title: t(context, 'settings'), onTap: () => onNavigate(SettingsPage(onBackupPayload: onBackupPayload, onRestoreBackup: onRestoreBackup))),
+            DrawerItem(icon: Icons.star_border, color: Colors.amber, title: t(context, 'rate'), onTap: () => showSnack(context, 'Terima kasih atas penilaiannya.')),
+            DrawerItem(icon: Icons.help_outline, color: Colors.green, title: t(context, 'help'), onTap: () => onNavigate(const HelpPage())),
+            DrawerItem(icon: Icons.info_outline, color: Colors.teal.shade300, title: t(context, 'about'), onTap: () => onNavigate(const AboutPage())),
           ],
         ),
       ),
@@ -1084,9 +1391,9 @@ class DrawerItem extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return ListTile(
-      contentPadding: const EdgeInsets.symmetric(horizontal: 48, vertical: 13),
-      leading: Icon(icon, color: color, size: 38),
-      title: Text(title, style: const TextStyle(fontSize: 22, color: Color(0xFF5A5A5A))),
+      contentPadding: const EdgeInsets.symmetric(horizontal: 36, vertical: 9),
+      leading: Icon(icon, color: color, size: 31),
+      title: Text(title, style: const TextStyle(fontSize: 19, color: Color(0xFF5A5A5A))),
       onTap: () {
         Navigator.pop(context);
         onTap();
@@ -1133,7 +1440,7 @@ class _SearchPageState extends State<SearchPage> {
     return Scaffold(
       appBar: AppBar(
         leading: IconButton(icon: const Icon(Icons.arrow_back), onPressed: () => Navigator.pop(context)),
-        title: const Text('Pencarian'),
+        title: Text(t(context, 'search')),
         actions: [
           Padding(
             padding: const EdgeInsets.only(right: 20),
@@ -1143,10 +1450,10 @@ class _SearchPageState extends State<SearchPage> {
                 dropdownColor: brandRed,
                 iconEnabledColor: Colors.white,
                 style: const TextStyle(color: Colors.white, fontSize: 20),
-                items: const [
-                  DropdownMenuItem(value: 'total', child: Text('Total')),
-                  DropdownMenuItem(value: 'income', child: Text('Pemasukan')),
-                  DropdownMenuItem(value: 'expense', child: Text('Pengeluaran')),
+                items: [
+                  const DropdownMenuItem(value: 'total', child: Text('Total')),
+                  DropdownMenuItem(value: 'income', child: Text(t(context, 'income'))),
+                  DropdownMenuItem(value: 'expense', child: Text(t(context, 'expense'))),
                 ],
                 onChanged: (value) => setState(() => _type = value ?? 'total'),
               ),
@@ -1169,7 +1476,7 @@ class _SearchPageState extends State<SearchPage> {
                       child: TextField(
                         controller: _keyword,
                         onChanged: (_) => setState(() {}),
-                        decoration: const InputDecoration(border: InputBorder.none, hintText: 'Kata Kunci', hintStyle: TextStyle(fontSize: 22)),
+                        decoration: InputDecoration(border: InputBorder.none, hintText: t(context, 'keyword'), hintStyle: const TextStyle(fontSize: 22)),
                         style: const TextStyle(fontSize: 22),
                       ),
                     ),
@@ -1178,11 +1485,11 @@ class _SearchPageState extends State<SearchPage> {
                 const Divider(),
                 Row(
                   children: [
-                    const SizedBox(width: 150, child: Text('Kategori', style: TextStyle(fontSize: 20, color: Color(0xFF555555)))),
+                    SizedBox(width: 150, child: Text(t(context, 'category'), style: const TextStyle(fontSize: 20, color: Color(0xFF555555)))),
                     Expanded(
                       child: DropdownButtonFormField<String>(
                         initialValue: _category,
-                        items: [null, ...widget.categories.toSet()].map((cat) => DropdownMenuItem(value: cat, child: Text(cat ?? 'Semua Kategori'))).toList(),
+                        items: [null, ...widget.categories.toSet()].map((cat) => DropdownMenuItem(value: cat, child: Text(cat ?? t(context, 'allCategories')))).toList(),
                         onChanged: (value) => setState(() => _category = value),
                         decoration: const InputDecoration(fillColor: Color(0xFFE8E8EA), filled: true, border: InputBorder.none),
                       ),
@@ -1192,10 +1499,10 @@ class _SearchPageState extends State<SearchPage> {
                 const SizedBox(height: 14),
                 Row(
                   children: [
-                    const SizedBox(width: 150, child: Text('Jumlah', style: TextStyle(fontSize: 20, color: Color(0xFF555555)))),
-                    Expanded(child: SearchAmount(controller: _min, hint: 'Min', onChanged: () => setState(() {}))),
+                    SizedBox(width: 150, child: Text(t(context, 'amount'), style: const TextStyle(fontSize: 20, color: Color(0xFF555555)))),
+                    Expanded(child: SearchAmount(controller: _min, hint: t(context, 'min'), onChanged: () => setState(() {}))),
                     const Padding(padding: EdgeInsets.symmetric(horizontal: 20), child: Text('~', style: TextStyle(fontSize: 22))),
-                    Expanded(child: SearchAmount(controller: _max, hint: 'Max', onChanged: () => setState(() {}))),
+                    Expanded(child: SearchAmount(controller: _max, hint: t(context, 'max'), onChanged: () => setState(() {}))),
                   ],
                 ),
               ],
@@ -1314,7 +1621,7 @@ class _CategoryPageState extends State<CategoryPage> {
     return Scaffold(
       appBar: AppBar(
         leading: IconButton(icon: const Icon(Icons.arrow_back), onPressed: () => Navigator.pop(context)),
-        title: const Text('Kategori'),
+        title: Text(t(context, 'category')),
         actions: [IconButton(onPressed: _addCategory, icon: const Icon(Icons.add, size: 36))],
       ),
       body: Column(
@@ -1323,8 +1630,8 @@ class _CategoryPageState extends State<CategoryPage> {
             color: Colors.white,
             padding: const EdgeInsets.all(20),
             child: SegmentedChoice(
-              left: 'Pengeluaran',
-              right: 'Pemasukan',
+              left: t(context, 'expense'),
+              right: t(context, 'income'),
               selectedLeft: _type == 'expense',
               onLeft: () => setState(() => _type = 'expense'),
               onRight: () => setState(() => _type = 'income'),
@@ -1356,21 +1663,21 @@ class _CategoryPageState extends State<CategoryPage> {
   }
 
   Future<void> _addCategory() async {
-    final value = await promptText(context, 'Tambah Kategori');
+    final value = await promptText(context, t(context, 'addCategory'));
     if (value == null || value.trim().isEmpty) return;
     setState(() => _current.add(value.trim()));
     await widget.onSaveCategories(_type, _current);
   }
 
   Future<void> _editCategory(int index) async {
-    final value = await promptText(context, 'Edit Kategori', initial: _current[index]);
+    final value = await promptText(context, t(context, 'editCategory'), initial: _current[index]);
     if (value == null || value.trim().isEmpty) return;
     setState(() => _current[index] = value.trim());
     await widget.onSaveCategories(_type, _current);
   }
 
   Future<void> _deleteCategory(int index) async {
-    if (!await confirm(context, 'Hapus kategori ini?')) return;
+    if (!await confirm(context, t(context, 'deleteCategory'))) return;
     setState(() => _current.removeAt(index));
     await widget.onSaveCategories(_type, _current);
   }
@@ -1391,31 +1698,65 @@ class SettingsPage extends StatelessWidget {
     return Scaffold(
       appBar: AppBar(
         leading: IconButton(icon: const Icon(Icons.arrow_back), onPressed: () => Navigator.pop(context)),
-        title: const Text('Pengaturan'),
+        title: Text(t(context, 'settings')),
       ),
       body: ListView(
         children: [
-          const SettingsTile(title: 'Atur Warna Tema', subtitle: 'Red Amber'),
-          const SettingsTile(title: 'Format Mata Uang', subtitle: 'Indonesian rupiah(Rp)'),
-          const SettingsTile(title: 'Atur Saldo Bawaan', subtitle: 'Tidak Aktif'),
-          const SettingsTile(title: 'Hapus Iklan', subtitle: 'Tidak Aktif'),
-          const SettingsTile(title: 'Waktu/Jam Transaksi', subtitle: 'Tidak Aktif'),
-          const SettingsTile(title: 'Pilih Bahasa', subtitle: 'Indonesia'),
-          const SettingsTile(title: 'Hari Pertama Mingguan', subtitle: 'Minggu'),
-          const SettingsTile(title: 'Tanggal Pertama Bulanan', subtitle: '1'),
+          SettingsTile(title: t(context, 'themeColor'), subtitle: 'Red Amber'),
+          SettingsTile(title: t(context, 'currencyFormat'), subtitle: 'Indonesian rupiah(Rp)'),
+          SettingsTile(title: t(context, 'openingBalance'), subtitle: t(context, 'inactive')),
+          SettingsTile(title: t(context, 'removeAds'), subtitle: t(context, 'inactive')),
+          SettingsTile(title: t(context, 'transactionTime'), subtitle: t(context, 'inactive')),
+          SettingsTile(
+            title: t(context, 'selectLanguage'),
+            subtitle: languageName(AppLocaleScope.of(context).languageCode),
+            onTap: () => showLanguagePicker(context),
+          ),
+          SettingsTile(title: t(context, 'firstWeekday'), subtitle: 'Minggu'),
+          SettingsTile(title: t(context, 'firstMonthDate'), subtitle: '1'),
           const Divider(thickness: 2),
-          SettingsTile(title: 'Pengingat', subtitle: 'Tidak Aktif', onTap: () => showSnack(context, 'Pengingat belum aktif.')),
-          SettingsTile(title: 'Atur PIN', subtitle: 'Tidak Aktif', onTap: () => showSnack(context, 'PIN belum aktif.')),
-          SettingsTile(title: 'Buka Cepat', subtitle: 'Tidak Aktif', onTap: () => showSnack(context, 'Buka cepat belum aktif.')),
+          SettingsTile(title: t(context, 'reminder'), subtitle: t(context, 'inactive'), onTap: () => showSnack(context, '${t(context, 'reminder')} ${t(context, 'inactive').toLowerCase()}')),
+          SettingsTile(title: t(context, 'pin'), subtitle: t(context, 'inactive'), onTap: () => showSnack(context, '${t(context, 'pin')} ${t(context, 'inactive').toLowerCase()}')),
+          SettingsTile(title: t(context, 'quickOpen'), subtitle: t(context, 'inactive'), onTap: () => showSnack(context, '${t(context, 'quickOpen')} ${t(context, 'inactive').toLowerCase()}')),
           const Divider(thickness: 2),
-          SettingsTile(title: 'Backup/Restore di Google Drive', onTap: () => showBackupSheet(context, true)),
-          SettingsTile(title: 'Backup/Restore di Device Storage', onTap: () => showBackupSheet(context, false)),
-          SettingsTile(title: 'Kirim File Database', onTap: () => shareBackup(context)),
-          SettingsTile(title: 'Setel Ulang Data', onTap: () => showSnack(context, 'Gunakan restore backup kosong untuk setel ulang.')),
+          SettingsTile(title: t(context, 'backupDrive'), onTap: () => showBackupSheet(context, true)),
+          SettingsTile(title: t(context, 'backupStorage'), onTap: () => showBackupSheet(context, false)),
+          SettingsTile(title: t(context, 'shareDatabase'), onTap: () => shareBackup(context)),
+          SettingsTile(title: t(context, 'resetData'), onTap: () => showSnack(context, 'Gunakan restore backup kosong untuk setel ulang.')),
           const SizedBox(height: 80),
           const Center(child: Text('Catatan Keuangan\nVersion $appVersion', textAlign: TextAlign.center, style: TextStyle(color: Colors.grey, fontSize: 16))),
         ],
       ),
+    );
+  }
+
+  Future<void> showLanguagePicker(BuildContext context) async {
+    final scope = AppLocaleScope.of(context);
+    await showModalBottomSheet<void>(
+      context: context,
+      showDragHandle: true,
+      builder: (sheetContext) {
+        return SafeArea(
+          child: ListView.separated(
+            shrinkWrap: true,
+            itemCount: supportedLanguages.length,
+            separatorBuilder: (context, index) => const Divider(height: 1),
+            itemBuilder: (context, index) {
+              final language = supportedLanguages[index];
+              final selected = language.code == scope.languageCode;
+              return ListTile(
+                leading: Icon(selected ? Icons.radio_button_checked : Icons.radio_button_off, color: selected ? brandRed : Colors.grey),
+                title: Text(language.nativeName, style: const TextStyle(fontSize: 18)),
+                subtitle: Text(language.englishName),
+                onTap: () async {
+                  await scope.setLanguage(language.code);
+                  if (sheetContext.mounted) Navigator.pop(sheetContext);
+                },
+              );
+            },
+          ),
+        );
+      },
     );
   }
 
@@ -1470,7 +1811,7 @@ class SettingsPage extends StatelessWidget {
       allowedExtensions: ['json'],
       bytes: bytes,
     );
-    if (context.mounted) showSnack(context, path == null ? 'Backup dibatalkan.' : 'Backup tersimpan.');
+    if (context.mounted) showSnack(context, path == null ? t(context, 'backupCancelled') : t(context, 'backupSaved'));
   }
 
   Future<void> restoreBackup(BuildContext context) async {
@@ -1479,7 +1820,7 @@ class SettingsPage extends StatelessWidget {
     final file = File(result.files.single.path!);
     final decoded = jsonDecode(await file.readAsString()) as Map<String, dynamic>;
     await onRestoreBackup(decoded);
-    if (context.mounted) showSnack(context, 'Data berhasil dipulihkan.');
+    if (context.mounted) showSnack(context, t(context, 'restoreDone'));
   }
 }
 
@@ -1499,10 +1840,10 @@ class SettingsTile extends StatelessWidget {
   Widget build(BuildContext context) {
     return ListTile(
       tileColor: Colors.white,
-      contentPadding: const EdgeInsets.symmetric(horizontal: 30, vertical: 8),
-      title: Text(title, style: const TextStyle(fontSize: 21, color: Color(0xFF222222))),
-      subtitle: subtitle == null ? null : Text(subtitle!, style: const TextStyle(fontSize: 20, color: expenseRed)),
-      trailing: onTap == null ? null : const Icon(Icons.chevron_right, size: 34),
+      contentPadding: const EdgeInsets.symmetric(horizontal: 24, vertical: 5),
+      title: Text(title, style: const TextStyle(fontSize: 18.5, color: Color(0xFF222222))),
+      subtitle: subtitle == null ? null : Text(subtitle!, style: const TextStyle(fontSize: 17, color: expenseRed)),
+      trailing: onTap == null ? null : const Icon(Icons.chevron_right, size: 28),
       onTap: onTap,
     );
   }
