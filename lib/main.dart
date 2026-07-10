@@ -27,6 +27,31 @@ const storageTransactionsKey = 'transactions_v1';
 const storageExpenseCategoriesKey = 'expense_categories_v1';
 const storageIncomeCategoriesKey = 'income_categories_v1';
 const storageLanguageKey = 'language_code_v1';
+const storageThemeKey = 'theme_color_v1';
+const storageCurrencyKey = 'currency_code_v1';
+
+const themeVariants = [
+  AppThemeVariant('redAmber', 'Red Amber', Color(0xFFE9433D), Color(0xFFFFF2F1)),
+  AppThemeVariant('emerald', 'Emerald', Color(0xFF059669), Color(0xFFEAFBF3)),
+  AppThemeVariant('ocean', 'Ocean Blue', Color(0xFF0EA5E9), Color(0xFFEAF7FF)),
+  AppThemeVariant('indigo', 'Indigo', Color(0xFF4F46E5), Color(0xFFF0EFFF)),
+  AppThemeVariant('violet', 'Violet', Color(0xFF7C3AED), Color(0xFFF5EEFF)),
+  AppThemeVariant('rose', 'Rose', Color(0xFFE11D48), Color(0xFFFFEEF3)),
+  AppThemeVariant('orange', 'Orange', Color(0xFFF97316), Color(0xFFFFF4E8)),
+  AppThemeVariant('teal', 'Teal', Color(0xFF0F766E), Color(0xFFEAF8F6)),
+  AppThemeVariant('slate', 'Slate', Color(0xFF334155), Color(0xFFF1F5F9)),
+];
+
+const currencyVariants = [
+  CurrencyVariant('IDR', 'Indonesian rupiah (Rp)', 'id_ID', 'Rp', 0),
+  CurrencyVariant('USD', 'US dollar (\$)', 'en_US', r'$', 2),
+  CurrencyVariant('EUR', 'Euro (€)', 'de_DE', '€', 2),
+  CurrencyVariant('JPY', 'Japanese yen (¥)', 'ja_JP', '¥', 0),
+  CurrencyVariant('MYR', 'Malaysian ringgit (RM)', 'ms_MY', 'RM', 2),
+  CurrencyVariant('SGD', 'Singapore dollar (S\$)', 'en_SG', r'S$', 2),
+  CurrencyVariant('AUD', 'Australian dollar (A\$)', 'en_AU', r'A$', 2),
+  CurrencyVariant('GBP', 'Pound sterling (£)', 'en_GB', '£', 2),
+];
 
 const supportedLanguages = [
   AppLanguage('system', 'System', 'Sistem'),
@@ -234,6 +259,25 @@ class AppLanguage {
   final String englishName;
 }
 
+class AppThemeVariant {
+  const AppThemeVariant(this.key, this.name, this.primary, this.soft);
+
+  final String key;
+  final String name;
+  final Color primary;
+  final Color soft;
+}
+
+class CurrencyVariant {
+  const CurrencyVariant(this.code, this.name, this.locale, this.symbol, this.decimalDigits);
+
+  final String code;
+  final String name;
+  final String locale;
+  final String symbol;
+  final int decimalDigits;
+}
+
 const monthNames = [
   'Jan',
   'Feb',
@@ -299,16 +343,22 @@ class FinanceApp extends StatefulWidget {
 
 class _FinanceAppState extends State<FinanceApp> {
   String _languageCode = 'id';
+  String _themeKey = 'redAmber';
+  String _currencyCode = 'IDR';
 
   @override
   void initState() {
     super.initState();
-    _loadLanguage();
+    _loadSettings();
   }
 
-  Future<void> _loadLanguage() async {
+  Future<void> _loadSettings() async {
     final prefs = await SharedPreferences.getInstance();
-    setState(() => _languageCode = prefs.getString(storageLanguageKey) ?? 'id');
+    setState(() {
+      _languageCode = prefs.getString(storageLanguageKey) ?? 'id';
+      _themeKey = prefs.getString(storageThemeKey) ?? 'redAmber';
+      _currencyCode = prefs.getString(storageCurrencyKey) ?? 'IDR';
+    });
   }
 
   Future<void> _setLanguage(String code) async {
@@ -317,12 +367,41 @@ class _FinanceAppState extends State<FinanceApp> {
     setState(() => _languageCode = code);
   }
 
+  Future<void> _setTheme(String key) async {
+    final prefs = await SharedPreferences.getInstance();
+    await prefs.setString(storageThemeKey, key);
+    setState(() => _themeKey = key);
+  }
+
+  Future<void> _setCurrency(String code) async {
+    final prefs = await SharedPreferences.getInstance();
+    await prefs.setString(storageCurrencyKey, code);
+    setState(() => _currencyCode = code);
+  }
+
   @override
   Widget build(BuildContext context) {
     final locale = _languageCode == 'system' ? null : Locale(_languageCode);
+    final appTheme = themeVariant(_themeKey);
+    final currency = currencyVariant(_currencyCode);
+    SystemChrome.setSystemUIOverlayStyle(
+      SystemUiOverlayStyle(
+        statusBarColor: appTheme.primary,
+        statusBarIconBrightness: Brightness.light,
+        systemNavigationBarColor: Colors.white,
+        systemNavigationBarIconBrightness: Brightness.dark,
+      ),
+    );
     return AppLocaleScope(
       languageCode: _languageCode,
       setLanguage: _setLanguage,
+      themeKey: _themeKey,
+      setTheme: _setTheme,
+      currencyCode: _currencyCode,
+      setCurrency: _setCurrency,
+      primaryColor: appTheme.primary,
+      softColor: appTheme.soft,
+      currency: currency,
       child: MaterialApp(
         title: appName,
         debugShowCheckedModeBanner: false,
@@ -338,46 +417,46 @@ class _FinanceAppState extends State<FinanceApp> {
         ],
         theme: ThemeData(
           colorScheme: ColorScheme.fromSeed(
-            seedColor: brandRed,
-            primary: brandRed,
+            seedColor: appTheme.primary,
+            primary: appTheme.primary,
             secondary: brandDark,
             surface: surface,
           ),
           scaffoldBackgroundColor: pageBg,
           fontFamily: 'Roboto',
-          appBarTheme: const AppBarTheme(
-            backgroundColor: brandRed,
+          appBarTheme: AppBarTheme(
+            backgroundColor: appTheme.primary,
             foregroundColor: Colors.white,
             elevation: 0,
             scrolledUnderElevation: 0,
             centerTitle: false,
-            titleTextStyle: TextStyle(fontSize: 21, fontWeight: FontWeight.w600),
-            iconTheme: IconThemeData(color: Colors.white, size: 26),
+            titleTextStyle: const TextStyle(fontSize: 21, fontWeight: FontWeight.w600),
+            iconTheme: const IconThemeData(color: Colors.white, size: 26),
           ),
-          floatingActionButtonTheme: const FloatingActionButtonThemeData(
-            backgroundColor: brandRed,
+          floatingActionButtonTheme: FloatingActionButtonThemeData(
+            backgroundColor: appTheme.primary,
             foregroundColor: Colors.white,
             elevation: 4,
           ),
-          inputDecorationTheme: const InputDecorationTheme(
+          inputDecorationTheme: InputDecorationTheme(
             filled: true,
             fillColor: Colors.white,
-            border: OutlineInputBorder(
+            border: const OutlineInputBorder(
               borderRadius: BorderRadius.all(Radius.circular(8)),
               borderSide: BorderSide(color: lineColor),
             ),
-            enabledBorder: OutlineInputBorder(
+            enabledBorder: const OutlineInputBorder(
               borderRadius: BorderRadius.all(Radius.circular(8)),
               borderSide: BorderSide(color: lineColor),
             ),
             focusedBorder: OutlineInputBorder(
-              borderRadius: BorderRadius.all(Radius.circular(8)),
-              borderSide: BorderSide(color: brandRed, width: 1.4),
+              borderRadius: const BorderRadius.all(Radius.circular(8)),
+              borderSide: BorderSide(color: appTheme.primary, width: 1.4),
             ),
           ),
           filledButtonTheme: FilledButtonThemeData(
             style: FilledButton.styleFrom(
-              backgroundColor: brandRed,
+              backgroundColor: appTheme.primary,
               foregroundColor: Colors.white,
               shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
             ),
@@ -391,7 +470,7 @@ class _FinanceAppState extends State<FinanceApp> {
           ),
           useMaterial3: true,
         ),
-        home: const AppShell(),
+        home: const SplashPage(),
       ),
     );
   }
@@ -402,11 +481,25 @@ class AppLocaleScope extends InheritedWidget {
     super.key,
     required this.languageCode,
     required this.setLanguage,
+    required this.themeKey,
+    required this.setTheme,
+    required this.currencyCode,
+    required this.setCurrency,
+    required this.primaryColor,
+    required this.softColor,
+    required this.currency,
     required super.child,
   });
 
   final String languageCode;
   final Future<void> Function(String code) setLanguage;
+  final String themeKey;
+  final Future<void> Function(String key) setTheme;
+  final String currencyCode;
+  final Future<void> Function(String code) setCurrency;
+  final Color primaryColor;
+  final Color softColor;
+  final CurrencyVariant currency;
 
   static AppLocaleScope of(BuildContext context) {
     return context.dependOnInheritedWidgetOfExactType<AppLocaleScope>()!;
@@ -414,9 +507,29 @@ class AppLocaleScope extends InheritedWidget {
 
   @override
   bool updateShouldNotify(AppLocaleScope oldWidget) {
-    return oldWidget.languageCode != languageCode;
+    return oldWidget.languageCode != languageCode ||
+        oldWidget.themeKey != themeKey ||
+        oldWidget.currencyCode != currencyCode;
   }
 }
+
+AppThemeVariant themeVariant(String key) {
+  return themeVariants.firstWhere(
+    (theme) => theme.key == key,
+    orElse: () => themeVariants.first,
+  );
+}
+
+CurrencyVariant currencyVariant(String code) {
+  return currencyVariants.firstWhere(
+    (currency) => currency.code == code,
+    orElse: () => currencyVariants.first,
+  );
+}
+
+Color appPrimary(BuildContext context) => AppLocaleScope.of(context).primaryColor;
+
+Color appSoft(BuildContext context) => AppLocaleScope.of(context).softColor;
 
 String t(BuildContext context, String key) {
   final code = AppLocaleScope.of(context).languageCode;
@@ -430,6 +543,137 @@ String languageName(String code) {
   return supportedLanguages
       .firstWhere((language) => language.code == code, orElse: () => supportedLanguages.first)
       .nativeName;
+}
+
+String themeName(String key) => themeVariant(key).name;
+
+String currencyName(String code) => currencyVariant(code).name;
+
+class SplashPage extends StatefulWidget {
+  const SplashPage({super.key});
+
+  @override
+  State<SplashPage> createState() => _SplashPageState();
+}
+
+class _SplashPageState extends State<SplashPage> with SingleTickerProviderStateMixin {
+  late final AnimationController _controller;
+  late final Animation<double> _scale;
+  late final Animation<double> _fade;
+
+  @override
+  void initState() {
+    super.initState();
+    _controller = AnimationController(
+      vsync: this,
+      duration: const Duration(milliseconds: 1150),
+    )..forward();
+    _scale = CurvedAnimation(parent: _controller, curve: Curves.easeOutBack);
+    _fade = CurvedAnimation(parent: _controller, curve: Curves.easeOut);
+    Future.delayed(const Duration(milliseconds: 1700), () {
+      if (!mounted) return;
+      Navigator.of(context).pushReplacement(
+        PageRouteBuilder(
+          pageBuilder: (context, animation, secondaryAnimation) => const AppShell(),
+          transitionDuration: const Duration(milliseconds: 450),
+          transitionsBuilder: (context, animation, secondaryAnimation, child) {
+            return FadeTransition(opacity: animation, child: child);
+          },
+        ),
+      );
+    });
+  }
+
+  @override
+  void dispose() {
+    _controller.dispose();
+    super.dispose();
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final primary = appPrimary(context);
+    return Scaffold(
+      body: Container(
+        width: double.infinity,
+        height: double.infinity,
+        decoration: BoxDecoration(
+          gradient: LinearGradient(
+            begin: Alignment.topLeft,
+            end: Alignment.bottomRight,
+            colors: [primary, brandDark],
+          ),
+        ),
+        child: SafeArea(
+          child: FadeTransition(
+            opacity: _fade,
+            child: Column(
+              children: [
+                const Spacer(),
+                ScaleTransition(
+                  scale: _scale,
+                  child: Container(
+                    width: 142,
+                    height: 142,
+                    padding: const EdgeInsets.all(10),
+                    decoration: BoxDecoration(
+                      color: Colors.white.withValues(alpha: 0.16),
+                      borderRadius: BorderRadius.circular(8),
+                      border: Border.all(color: Colors.white.withValues(alpha: 0.28)),
+                      boxShadow: const [
+                        BoxShadow(
+                          color: Color(0x33000000),
+                          blurRadius: 30,
+                          offset: Offset(0, 16),
+                        ),
+                      ],
+                    ),
+                    child: ClipRRect(
+                      borderRadius: BorderRadius.circular(8),
+                      child: Image.asset('assets/icons/app_icon.png', fit: BoxFit.cover),
+                    ),
+                  ),
+                ),
+                const SizedBox(height: 24),
+                const Text(
+                  appName,
+                  textAlign: TextAlign.center,
+                  style: TextStyle(
+                    color: Colors.white,
+                    fontSize: 25,
+                    fontWeight: FontWeight.w900,
+                    letterSpacing: 0,
+                  ),
+                ),
+                const SizedBox(height: 8),
+                Text(
+                  'Smart money tracker',
+                  style: TextStyle(
+                    color: Colors.white.withValues(alpha: 0.82),
+                    fontSize: 15,
+                    fontWeight: FontWeight.w600,
+                  ),
+                ),
+                const Spacer(),
+                SizedBox(
+                  width: 150,
+                  child: ClipRRect(
+                    borderRadius: BorderRadius.circular(8),
+                    child: LinearProgressIndicator(
+                      minHeight: 5,
+                      valueColor: const AlwaysStoppedAnimation<Color>(Colors.white),
+                      backgroundColor: Colors.white.withValues(alpha: 0.22),
+                    ),
+                  ),
+                ),
+                const SizedBox(height: 34),
+              ],
+            ),
+          ),
+        ),
+      ),
+    );
+  }
 }
 
 class AppShell extends StatefulWidget {
@@ -884,7 +1128,7 @@ class SummaryItem extends StatelessWidget {
           ),
           const SizedBox(height: 5),
           Text(
-            value == 0 ? '0' : money(value),
+            value == 0 ? '0' : money(value, context),
             maxLines: 1,
             overflow: TextOverflow.ellipsis,
             style: TextStyle(fontSize: 16, color: color, fontWeight: FontWeight.w700),
@@ -982,7 +1226,7 @@ class DailyView extends StatelessWidget {
                     ),
                     const SizedBox(width: 10),
                     Text(
-                      money(tx.amount),
+                      money(tx.amount, context),
                       maxLines: 1,
                       overflow: TextOverflow.ellipsis,
                       style: TextStyle(
@@ -1136,15 +1380,15 @@ class PeriodRows extends StatelessWidget {
                     Container(
                       padding: const EdgeInsets.symmetric(horizontal: 13, vertical: 7),
                       decoration: BoxDecoration(
-                        color: row.selected ? brandSoft : const Color(0xFFF0F2F5),
+                        color: row.selected ? appSoft(context) : const Color(0xFFF0F2F5),
                         borderRadius: BorderRadius.circular(8),
-                        border: Border.all(color: row.selected ? brandRed : lineColor),
+                        border: Border.all(color: row.selected ? appPrimary(context) : lineColor),
                       ),
                       child: Text(
                         row.badge,
                         maxLines: 1,
                         overflow: TextOverflow.ellipsis,
-                        style: TextStyle(fontSize: 14.5, color: row.selected ? brandRed : textMuted, fontWeight: FontWeight.w700),
+                        style: TextStyle(fontSize: 14.5, color: row.selected ? appPrimary(context) : textMuted, fontWeight: FontWeight.w700),
                       ),
                     ),
                   ],
@@ -1152,13 +1396,13 @@ class PeriodRows extends StatelessWidget {
               ),
               Expanded(
                 child: Text(
-                  money(row.income),
+                  money(row.income, context),
                   textAlign: TextAlign.right,
                   style: const TextStyle(color: incomeGreen, fontSize: 15.5, fontWeight: FontWeight.w700),
                 ),
               ),
               const SizedBox(width: 24),
-              Text(money(row.expense), textAlign: TextAlign.right, style: const TextStyle(color: expenseRed, fontSize: 15.5, fontWeight: FontWeight.w700)),
+              Text(money(row.expense, context), textAlign: TextAlign.right, style: const TextStyle(color: expenseRed, fontSize: 15.5, fontWeight: FontWeight.w700)),
             ],
           ),
         );
@@ -1214,6 +1458,7 @@ class _TransactionPageState extends State<TransactionPage> {
   String _type = 'expense';
   late DateTime _date;
   late String _category;
+  bool _formattedInitialAmount = false;
 
   @override
   void initState() {
@@ -1224,6 +1469,15 @@ class _TransactionPageState extends State<TransactionPage> {
     _category = transaction?.category ?? _categories.first;
     _amountController.text = transaction == null ? '' : transaction.amount.toString();
     _noteController.text = transaction?.note ?? '';
+  }
+
+  @override
+  void didChangeDependencies() {
+    super.didChangeDependencies();
+    if (!_formattedInitialAmount && _amountController.text.isNotEmpty) {
+      _amountController.text = formatMoneyInput(_amountController.text, context);
+      _formattedInitialAmount = true;
+    }
   }
 
   @override
@@ -1305,7 +1559,7 @@ class _TransactionPageState extends State<TransactionPage> {
                     initialValue: _categories.contains(_category) ? _category : _categories.first,
                     items: _categories.map((cat) => DropdownMenuItem(value: cat, child: Text(cat))).toList(),
                     onChanged: (value) => setState(() => _category = value ?? _category),
-                    iconEnabledColor: brandRed,
+                    iconEnabledColor: appPrimary(context),
                     style: const TextStyle(fontSize: 17, color: Colors.black87),
                     decoration: _compactInput,
                   ),
@@ -1317,7 +1571,7 @@ class _TransactionPageState extends State<TransactionPage> {
                   child: TextField(
                     controller: _amountController,
                     keyboardType: TextInputType.number,
-                    inputFormatters: [FilteringTextInputFormatter.digitsOnly],
+                    inputFormatters: [MoneyInputFormatter(context)],
                     style: const TextStyle(fontSize: 17),
                     decoration: _compactInput,
                   ),
@@ -1340,7 +1594,7 @@ class _TransactionPageState extends State<TransactionPage> {
               width: double.infinity,
               height: 50,
               child: FilledButton(
-                style: FilledButton.styleFrom(backgroundColor: brandRed, shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8))),
+                style: FilledButton.styleFrom(backgroundColor: appPrimary(context), shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8))),
                 onPressed: _save,
                 child: Text(t(context, 'save'), style: const TextStyle(fontSize: 16, color: Colors.white)),
               ),
@@ -1364,13 +1618,13 @@ class _TransactionPageState extends State<TransactionPage> {
       firstDate: DateTime(2000),
       lastDate: DateTime(2100),
       initialDate: _date,
-      builder: (context, child) => Theme(data: Theme.of(context).copyWith(colorScheme: Theme.of(context).colorScheme.copyWith(primary: brandRed)), child: child!),
+      builder: (context, child) => Theme(data: Theme.of(context).copyWith(colorScheme: Theme.of(context).colorScheme.copyWith(primary: appPrimary(context))), child: child!),
     );
     if (picked != null) setState(() => _date = picked);
   }
 
   Future<void> _save() async {
-    final amount = int.tryParse(_amountController.text) ?? 0;
+    final amount = parseMoneyInput(_amountController.text);
     if (amount <= 0) {
       showSnack(context, t(context, 'amountRequired'));
       return;
@@ -1454,21 +1708,21 @@ class SegmentedChoice extends StatelessWidget {
       ),
       child: Row(
         children: [
-          Expanded(child: _button(left, selectedLeft, onLeft)),
-          Expanded(child: _button(right, !selectedLeft, onRight)),
+          Expanded(child: _button(context, left, selectedLeft, onLeft)),
+          Expanded(child: _button(context, right, !selectedLeft, onRight)),
         ],
       ),
     );
   }
 
-  Widget _button(String text, bool selected, VoidCallback onTap) {
+  Widget _button(BuildContext context, String text, bool selected, VoidCallback onTap) {
     return InkWell(
       onTap: onTap,
       child: AnimatedContainer(
         duration: const Duration(milliseconds: 160),
         alignment: Alignment.center,
         decoration: BoxDecoration(
-          color: selected ? brandRed : Colors.transparent,
+          color: selected ? appPrimary(context) : Colors.transparent,
           borderRadius: BorderRadius.circular(6),
           boxShadow: selected
               ? const [
@@ -1660,7 +1914,7 @@ class _SearchPageState extends State<SearchPage> {
             child: DropdownButtonHideUnderline(
               child: DropdownButton<String>(
                 value: _type,
-                dropdownColor: brandRed,
+                dropdownColor: appPrimary(context),
                 iconEnabledColor: Colors.white,
                 style: const TextStyle(color: Colors.white, fontSize: 20),
                 items: [
@@ -1677,44 +1931,57 @@ class _SearchPageState extends State<SearchPage> {
       body: Column(
         children: [
           Container(
-            color: Colors.white,
-            padding: const EdgeInsets.fromLTRB(28, 18, 28, 18),
+            margin: const EdgeInsets.fromLTRB(12, 12, 12, 8),
+            padding: const EdgeInsets.all(14),
+            decoration: BoxDecoration(
+              color: surface,
+              borderRadius: BorderRadius.circular(8),
+              border: Border.all(color: lineColor),
+              boxShadow: const [
+                BoxShadow(
+                  color: Color(0x10000000),
+                  blurRadius: 12,
+                  offset: Offset(0, 5),
+                ),
+              ],
+            ),
             child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                Row(
-                  children: [
-                    const Icon(Icons.search, size: 42, color: Color(0xFF4D4D4D)),
-                    const SizedBox(width: 28),
-                    Expanded(
-                      child: TextField(
-                        controller: _keyword,
-                        onChanged: (_) => setState(() {}),
-                        decoration: InputDecoration(border: InputBorder.none, hintText: t(context, 'keyword'), hintStyle: const TextStyle(fontSize: 22)),
-                        style: const TextStyle(fontSize: 22),
-                      ),
-                    ),
-                  ],
+                TextField(
+                  controller: _keyword,
+                  onChanged: (_) => setState(() {}),
+                  decoration: InputDecoration(
+                    prefixIcon: const Icon(Icons.search),
+                    hintText: t(context, 'keyword'),
+                    isDense: true,
+                    contentPadding: const EdgeInsets.symmetric(horizontal: 12, vertical: 12),
+                  ),
+                  style: const TextStyle(fontSize: 16),
                 ),
-                const Divider(),
-                Row(
-                  children: [
-                    SizedBox(width: 150, child: Text(t(context, 'category'), style: const TextStyle(fontSize: 20, color: Color(0xFF555555)))),
-                    Expanded(
-                      child: DropdownButtonFormField<String>(
-                        initialValue: _category,
-                        items: [null, ...widget.categories.toSet()].map((cat) => DropdownMenuItem(value: cat, child: Text(cat ?? t(context, 'allCategories')))).toList(),
-                        onChanged: (value) => setState(() => _category = value),
-                        decoration: const InputDecoration(fillColor: Color(0xFFE8E8EA), filled: true, border: InputBorder.none),
-                      ),
-                    ),
-                  ],
+                const SizedBox(height: 12),
+                DropdownButtonFormField<String>(
+                  initialValue: _category,
+                  items: [null, ...widget.categories.toSet()]
+                      .map((cat) => DropdownMenuItem(value: cat, child: Text(cat ?? t(context, 'allCategories'))))
+                      .toList(),
+                  onChanged: (value) => setState(() => _category = value),
+                  decoration: InputDecoration(
+                    labelText: t(context, 'category'),
+                    isDense: true,
+                    contentPadding: const EdgeInsets.symmetric(horizontal: 12, vertical: 12),
+                  ),
                 ),
-                const SizedBox(height: 14),
+                const SizedBox(height: 12),
+                Text(t(context, 'amount'), style: const TextStyle(fontSize: 13.5, color: textMuted, fontWeight: FontWeight.w700)),
+                const SizedBox(height: 7),
                 Row(
                   children: [
-                    SizedBox(width: 150, child: Text(t(context, 'amount'), style: const TextStyle(fontSize: 20, color: Color(0xFF555555)))),
                     Expanded(child: SearchAmount(controller: _min, hint: t(context, 'min'), onChanged: () => setState(() {}))),
-                    const Padding(padding: EdgeInsets.symmetric(horizontal: 20), child: Text('~', style: TextStyle(fontSize: 22))),
+                    const Padding(
+                      padding: EdgeInsets.symmetric(horizontal: 8),
+                      child: Text('~', style: TextStyle(fontSize: 17, color: textMuted, fontWeight: FontWeight.w800)),
+                    ),
                     Expanded(child: SearchAmount(controller: _max, hint: t(context, 'max'), onChanged: () => setState(() {}))),
                   ],
                 ),
@@ -1725,27 +1992,56 @@ class _SearchPageState extends State<SearchPage> {
             child: results.isEmpty
                 ? const EmptyState()
                 : ListView.separated(
+                    padding: const EdgeInsets.fromLTRB(12, 4, 12, 12),
                     itemCount: results.length,
-                    separatorBuilder: (context, index) => const Divider(height: 1),
+                    separatorBuilder: (context, index) => const SizedBox(height: 8),
                     itemBuilder: (_, index) {
                       final tx = results[index];
-                      return ListTile(
-                        tileColor: Colors.white,
-                        onTap: () => widget.onEdit(tx),
-                        title: Text(tx.category),
-                        subtitle: Text('${formatDate(tx.date)} - ${tx.note}'),
-                        trailing: Text(money(tx.amount), style: TextStyle(color: tx.isIncome ? incomeGreen : expenseRed)),
+                      return Material(
+                        color: surface,
+                        borderRadius: BorderRadius.circular(8),
+                        child: InkWell(
+                          borderRadius: BorderRadius.circular(8),
+                          onTap: () => widget.onEdit(tx),
+                          child: Container(
+                            padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
+                            decoration: BoxDecoration(
+                              borderRadius: BorderRadius.circular(8),
+                              border: Border.all(color: lineColor),
+                            ),
+                            child: Row(
+                              children: [
+                                Expanded(
+                                  child: Column(
+                                    crossAxisAlignment: CrossAxisAlignment.start,
+                                    children: [
+                                      Text(tx.category, maxLines: 1, overflow: TextOverflow.ellipsis, style: const TextStyle(fontSize: 16, fontWeight: FontWeight.w800)),
+                                      const SizedBox(height: 4),
+                                      Text('${formatDate(tx.date)}${tx.note.isEmpty ? '' : ' - ${tx.note}'}', maxLines: 1, overflow: TextOverflow.ellipsis, style: const TextStyle(color: textMuted)),
+                                    ],
+                                  ),
+                                ),
+                                const SizedBox(width: 8),
+                                Text(money(tx.amount, context), style: TextStyle(color: tx.isIncome ? incomeGreen : expenseRed, fontWeight: FontWeight.w800)),
+                              ],
+                            ),
+                          ),
+                        ),
                       );
                     },
                   ),
           ),
           Container(
-            height: 72,
-            width: double.infinity,
-            color: brandRed,
-            child: IconButton(
-              icon: const Icon(Icons.file_download, color: Colors.white, size: 42),
-              onPressed: () => showExportDialog(context, results),
+            padding: const EdgeInsets.fromLTRB(12, 8, 12, 12),
+            color: pageBg,
+            child: SizedBox(
+              width: double.infinity,
+              height: 48,
+              child: FilledButton.icon(
+                onPressed: () => showExportDialog(context, results),
+                icon: const Icon(Icons.file_download, size: 22),
+                label: Text(t(context, 'export'), style: const TextStyle(fontSize: 16, fontWeight: FontWeight.w800)),
+              ),
             ),
           ),
         ],
@@ -1758,10 +2054,10 @@ class _SearchPageState extends State<SearchPage> {
     if (_category != null && tx.category != _category) return false;
     final text = '${tx.category} ${tx.note}'.toLowerCase();
     if (_keyword.text.isNotEmpty && !text.contains(_keyword.text.toLowerCase())) return false;
-    final min = int.tryParse(_min.text);
-    final max = int.tryParse(_max.text);
-    if (min != null && tx.amount < min) return false;
-    if (max != null && tx.amount > max) return false;
+    final min = parseMoneyInput(_min.text);
+    final max = parseMoneyInput(_max.text);
+    if (min > 0 && tx.amount < min) return false;
+    if (max > 0 && tx.amount > max) return false;
     return true;
   }
 }
@@ -1783,14 +2079,14 @@ class SearchAmount extends StatelessWidget {
     return TextField(
       controller: controller,
       keyboardType: TextInputType.number,
-      inputFormatters: [FilteringTextInputFormatter.digitsOnly],
+      inputFormatters: [MoneyInputFormatter(context)],
       onChanged: (_) => onChanged(),
-      textAlign: TextAlign.center,
+      textAlign: TextAlign.left,
+      style: const TextStyle(fontSize: 14.5, fontWeight: FontWeight.w700),
       decoration: InputDecoration(
         hintText: hint,
-        filled: true,
-        fillColor: const Color(0xFFE8E8EA),
-        border: InputBorder.none,
+        isDense: true,
+        contentPadding: const EdgeInsets.symmetric(horizontal: 10, vertical: 12),
       ),
     );
   }
@@ -1915,8 +2211,16 @@ class SettingsPage extends StatelessWidget {
       ),
       body: ListView(
         children: [
-          SettingsTile(title: t(context, 'themeColor'), subtitle: 'Red Amber'),
-          SettingsTile(title: t(context, 'currencyFormat'), subtitle: 'Indonesian rupiah(Rp)'),
+          SettingsTile(
+            title: t(context, 'themeColor'),
+            subtitle: themeName(AppLocaleScope.of(context).themeKey),
+            onTap: () => showThemePicker(context),
+          ),
+          SettingsTile(
+            title: t(context, 'currencyFormat'),
+            subtitle: currencyName(AppLocaleScope.of(context).currencyCode),
+            onTap: () => showCurrencyPicker(context),
+          ),
           SettingsTile(title: t(context, 'openingBalance'), subtitle: t(context, 'inactive')),
           SettingsTile(title: t(context, 'removeAds'), subtitle: t(context, 'inactive')),
           SettingsTile(title: t(context, 'transactionTime'), subtitle: t(context, 'inactive')),
@@ -1958,11 +2262,109 @@ class SettingsPage extends StatelessWidget {
               final language = supportedLanguages[index];
               final selected = language.code == scope.languageCode;
               return ListTile(
-                leading: Icon(selected ? Icons.radio_button_checked : Icons.radio_button_off, color: selected ? brandRed : Colors.grey),
+                leading: Icon(selected ? Icons.radio_button_checked : Icons.radio_button_off, color: selected ? appPrimary(context) : Colors.grey),
                 title: Text(language.nativeName, style: const TextStyle(fontSize: 18)),
                 subtitle: Text(language.englishName),
                 onTap: () async {
                   await scope.setLanguage(language.code);
+                  if (sheetContext.mounted) Navigator.pop(sheetContext);
+                },
+              );
+            },
+          ),
+        );
+      },
+    );
+  }
+
+  Future<void> showThemePicker(BuildContext context) async {
+    final scope = AppLocaleScope.of(context);
+    await showModalBottomSheet<void>(
+      context: context,
+      showDragHandle: true,
+      builder: (sheetContext) {
+        return SafeArea(
+          child: GridView.builder(
+            shrinkWrap: true,
+            padding: const EdgeInsets.fromLTRB(16, 8, 16, 24),
+            gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
+              crossAxisCount: 3,
+              childAspectRatio: 0.95,
+              crossAxisSpacing: 10,
+              mainAxisSpacing: 10,
+            ),
+            itemCount: themeVariants.length,
+            itemBuilder: (context, index) {
+              final item = themeVariants[index];
+              final selected = item.key == scope.themeKey;
+              return InkWell(
+                borderRadius: BorderRadius.circular(8),
+                onTap: () async {
+                  await scope.setTheme(item.key);
+                  if (sheetContext.mounted) Navigator.pop(sheetContext);
+                },
+                child: Container(
+                  padding: const EdgeInsets.all(10),
+                  decoration: BoxDecoration(
+                    color: selected ? item.soft : surface,
+                    borderRadius: BorderRadius.circular(8),
+                    border: Border.all(color: selected ? item.primary : lineColor, width: selected ? 2 : 1),
+                  ),
+                  child: Column(
+                    mainAxisAlignment: MainAxisAlignment.center,
+                    children: [
+                      Container(
+                        width: 38,
+                        height: 38,
+                        decoration: BoxDecoration(color: item.primary, shape: BoxShape.circle),
+                        child: selected ? const Icon(Icons.check, color: Colors.white) : null,
+                      ),
+                      const SizedBox(height: 10),
+                      Text(
+                        item.name,
+                        textAlign: TextAlign.center,
+                        maxLines: 2,
+                        overflow: TextOverflow.ellipsis,
+                        style: const TextStyle(fontSize: 13.5, fontWeight: FontWeight.w700),
+                      ),
+                    ],
+                  ),
+                ),
+              );
+            },
+          ),
+        );
+      },
+    );
+  }
+
+  Future<void> showCurrencyPicker(BuildContext context) async {
+    final scope = AppLocaleScope.of(context);
+    await showModalBottomSheet<void>(
+      context: context,
+      showDragHandle: true,
+      builder: (sheetContext) {
+        return SafeArea(
+          child: ListView.separated(
+            shrinkWrap: true,
+            itemCount: currencyVariants.length,
+            separatorBuilder: (context, index) => const Divider(height: 1),
+            itemBuilder: (context, index) {
+              final item = currencyVariants[index];
+              final selected = item.code == scope.currencyCode;
+              return ListTile(
+                leading: CircleAvatar(
+                  backgroundColor: selected ? scope.primaryColor : const Color(0xFFF0F2F5),
+                  child: Text(
+                    item.symbol,
+                    style: TextStyle(color: selected ? Colors.white : textPrimary, fontWeight: FontWeight.w800),
+                  ),
+                ),
+                title: Text(item.name, style: const TextStyle(fontWeight: FontWeight.w700)),
+                subtitle: Text(item.code),
+                trailing: selected ? Icon(Icons.check_circle, color: scope.primaryColor) : null,
+                onTap: () async {
+                  await scope.setCurrency(item.code);
                   if (sheetContext.mounted) Navigator.pop(sheetContext);
                 },
               );
@@ -1980,7 +2382,7 @@ class SettingsPage extends StatelessWidget {
         child: Wrap(
           children: [
             ListTile(
-              leading: const Icon(Icons.backup, color: brandRed),
+              leading: Icon(Icons.backup, color: appPrimary(context)),
               title: Text(googleDrive ? 'Backup ke Google Drive' : 'Backup ke Device Storage'),
               onTap: () {
                 Navigator.pop(context);
@@ -2083,7 +2485,7 @@ class SettingsTile extends StatelessWidget {
                           subtitle!,
                           maxLines: 1,
                           overflow: TextOverflow.ellipsis,
-                          style: const TextStyle(fontSize: 14.5, color: brandRed, fontWeight: FontWeight.w600),
+                          style: TextStyle(fontSize: 14.5, color: appPrimary(context), fontWeight: FontWeight.w600),
                         ),
                       ],
                     ],
@@ -2110,37 +2512,107 @@ class GraphPage extends StatelessWidget {
       totals[tx.category] = (totals[tx.category] ?? 0) + tx.amount;
     }
     final rows = totals.entries.toList()..sort((a, b) => b.value.compareTo(a.value));
+    final chartRows = rows.take(8).toList();
     final maxValue = rows.isEmpty ? 1 : rows.map((e) => e.value).reduce(max);
     return Scaffold(
       appBar: AppBar(
         leading: IconButton(icon: const Icon(Icons.arrow_back), onPressed: () => Navigator.pop(context)),
-        title: const Text('Grafik'),
+        title: Text(t(context, 'chart')),
       ),
       body: rows.isEmpty
           ? const EmptyState()
-          : ListView.builder(
-              padding: const EdgeInsets.all(24),
-              itemCount: rows.length,
-              itemBuilder: (_, index) {
-                final row = rows[index];
-                return Padding(
-                  padding: const EdgeInsets.only(bottom: 18),
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Row(
-                        mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                        children: [
-                          Text(row.key, style: const TextStyle(fontSize: 18)),
-                          Text(money(row.value), style: const TextStyle(fontSize: 16, color: brandRed)),
-                        ],
+          : ListView(
+              padding: const EdgeInsets.fromLTRB(12, 12, 12, 24),
+              children: [
+                Container(
+                  height: 290,
+                  padding: const EdgeInsets.fromLTRB(14, 16, 14, 12),
+                  decoration: BoxDecoration(
+                    color: surface,
+                    borderRadius: BorderRadius.circular(8),
+                    border: Border.all(color: lineColor),
+                    boxShadow: const [
+                      BoxShadow(
+                        color: Color(0x10000000),
+                        blurRadius: 12,
+                        offset: Offset(0, 5),
                       ),
-                      const SizedBox(height: 8),
-                      LinearProgressIndicator(value: row.value / maxValue, minHeight: 12, color: brandRed, backgroundColor: Colors.white),
                     ],
                   ),
-                );
-              },
+                  child: LayoutBuilder(
+                    builder: (context, constraints) {
+                      return Row(
+                        crossAxisAlignment: CrossAxisAlignment.end,
+                        children: chartRows.map((row) {
+                          final barHeight = max(18.0, (row.value / maxValue) * (constraints.maxHeight - 66));
+                          return Expanded(
+                            child: Padding(
+                              padding: const EdgeInsets.symmetric(horizontal: 4),
+                              child: Column(
+                                mainAxisAlignment: MainAxisAlignment.end,
+                                children: [
+                                  Text(
+                                    money(row.value, context),
+                                    maxLines: 1,
+                                    overflow: TextOverflow.ellipsis,
+                                    style: const TextStyle(fontSize: 10.5, color: textMuted, fontWeight: FontWeight.w700),
+                                  ),
+                                  const SizedBox(height: 6),
+                                  AnimatedContainer(
+                                    duration: const Duration(milliseconds: 250),
+                                    height: barHeight,
+                                    decoration: BoxDecoration(
+                                      color: appPrimary(context),
+                                      borderRadius: const BorderRadius.vertical(top: Radius.circular(8)),
+                                    ),
+                                  ),
+                                  const SizedBox(height: 8),
+                                  Text(
+                                    row.key,
+                                    maxLines: 2,
+                                    overflow: TextOverflow.ellipsis,
+                                    textAlign: TextAlign.center,
+                                    style: const TextStyle(fontSize: 11, color: textPrimary, fontWeight: FontWeight.w700),
+                                  ),
+                                ],
+                              ),
+                            ),
+                          );
+                        }).toList(),
+                      );
+                    },
+                  ),
+                ),
+                const SizedBox(height: 12),
+                ...rows.map((row) {
+                  return Container(
+                    margin: const EdgeInsets.only(bottom: 8),
+                    padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
+                    decoration: BoxDecoration(
+                      color: surface,
+                      borderRadius: BorderRadius.circular(8),
+                      border: Border.all(color: lineColor),
+                    ),
+                    child: Row(
+                    children: [
+                      Expanded(
+                        child: Text(
+                          row.key,
+                          maxLines: 1,
+                          overflow: TextOverflow.ellipsis,
+                          style: const TextStyle(fontSize: 16, fontWeight: FontWeight.w700),
+                        ),
+                      ),
+                      const SizedBox(width: 10),
+                      Text(
+                        money(row.value, context),
+                        style: TextStyle(fontSize: 15, color: appPrimary(context), fontWeight: FontWeight.w800),
+                      ),
+                    ],
+                  ),
+                  );
+                }),
+              ],
             ),
     );
   }
@@ -2205,7 +2677,7 @@ class AboutPage extends StatelessWidget {
                   ),
                   const SizedBox(height: 18),
                   FilledButton(
-                    style: FilledButton.styleFrom(backgroundColor: brandRed, shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(7))),
+                    style: FilledButton.styleFrom(backgroundColor: appPrimary(context), shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(7))),
                     onPressed: () {},
                     child: const Padding(
                       padding: EdgeInsets.symmetric(horizontal: 12, vertical: 10),
@@ -2245,7 +2717,7 @@ class DonationPage extends StatelessWidget {
         itemBuilder: (_, index) => ListTile(
           tileColor: Colors.white,
           contentPadding: const EdgeInsets.symmetric(horizontal: 30, vertical: 18),
-          title: Text(money(values[index]), style: const TextStyle(fontSize: 22, color: Color(0xFF5C5C5C))),
+          title: Text(money(values[index], context), style: const TextStyle(fontSize: 22, color: Color(0xFF5C5C5C))),
           trailing: const Icon(Icons.card_giftcard, color: Color(0xFF8F8F8F), size: 36),
           onTap: () => showSnack(context, 'Terima kasih. Fitur hadiah dapat disambungkan ke payment gateway.'),
         ),
@@ -2311,7 +2783,7 @@ Future<void> showExportDialog(BuildContext context, List<MoneyTransaction> trans
                       child: SizedBox(
                         height: 64,
                         child: FilledButton(
-                          style: FilledButton.styleFrom(backgroundColor: brandRed, shape: const RoundedRectangleBorder()),
+                          style: FilledButton.styleFrom(backgroundColor: appPrimary(context), shape: const RoundedRectangleBorder()),
                           onPressed: () => Navigator.pop(context),
                           child: const Text('BATAL', style: TextStyle(fontSize: 20, color: Colors.white)),
                         ),
@@ -2401,8 +2873,41 @@ void showSnack(BuildContext context, String message) {
   ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(message)));
 }
 
-String money(int value) {
-  return NumberFormat.currency(locale: 'id_ID', symbol: 'Rp', decimalDigits: 0).format(value);
+String money(int value, [BuildContext? context]) {
+  final currency = context == null
+      ? currencyVariants.first
+      : AppLocaleScope.of(context).currency;
+  return NumberFormat.currency(
+    locale: currency.locale,
+    symbol: currency.symbol,
+    decimalDigits: currency.decimalDigits,
+  ).format(value);
+}
+
+String formatMoneyInput(String raw, BuildContext context) {
+  final amount = parseMoneyInput(raw);
+  if (amount == 0) return '';
+  return money(amount, context);
+}
+
+int parseMoneyInput(String raw) {
+  final digits = raw.replaceAll(RegExp(r'[^0-9]'), '');
+  return int.tryParse(digits) ?? 0;
+}
+
+class MoneyInputFormatter extends TextInputFormatter {
+  MoneyInputFormatter(this.context);
+
+  final BuildContext context;
+
+  @override
+  TextEditingValue formatEditUpdate(TextEditingValue oldValue, TextEditingValue newValue) {
+    final formatted = formatMoneyInput(newValue.text, context);
+    return TextEditingValue(
+      text: formatted,
+      selection: TextSelection.collapsed(offset: formatted.length),
+    );
+  }
 }
 
 String formatDate(DateTime date) => '${two(date.day)} ${monthNames[date.month - 1]} ${date.year}';

@@ -8,7 +8,10 @@ void main() {
     SharedPreferences.setMockInitialValues({});
 
     await tester.pumpWidget(const FinanceApp());
-    await tester.pump(const Duration(milliseconds: 300));
+    expect(find.text('Catatan Keuangan PRO'), findsWidgets);
+
+    await tester.pump(const Duration(milliseconds: 1900));
+    await tester.pumpAndSettle();
 
     expect(find.text('Harian'), findsOneWidget);
     expect(find.text('Pemasukan'), findsOneWidget);
