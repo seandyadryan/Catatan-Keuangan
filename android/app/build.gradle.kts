@@ -15,7 +15,7 @@ if (keystorePropertiesFile.exists()) {
 }
 
 android {
-    namespace = "com.seandyadryan.catatankeuanganpro.catatan_keuangan_pro"
+    namespace = "com.deploydulupulangnanti.catatankeuanganpro"
     compileSdk = flutter.compileSdkVersion
     ndkVersion = flutter.ndkVersion
 
@@ -29,7 +29,7 @@ android {
     }
 
     defaultConfig {
-        applicationId = "com.seandyadryan.catatankeuanganpro.catatan_keuangan_pro"
+        applicationId = "com.deploydulupulangnanti.catatankeuanganpro"
         minSdk = flutter.minSdkVersion
         targetSdk = flutter.targetSdkVersion
         versionCode = flutter.versionCode

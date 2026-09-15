@@ -1,4 +1,4 @@
-package com.seandyadryan.catatankeuanganpro.catatan_keuangan_pro
+package com.deploydulupulangnanti.catatankeuanganpro
 
 import io.flutter.embedding.android.FlutterActivity
 

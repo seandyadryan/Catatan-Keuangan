@@ -10,6 +10,7 @@ import 'package:intl/intl.dart';
 import 'package:path_provider/path_provider.dart';
 import 'package:share_plus/share_plus.dart';
 import 'package:shared_preferences/shared_preferences.dart';
+import 'package:url_launcher/url_launcher.dart';
 
 const appName = 'Catatan Keuangan PRO';
 const appVersion = '1.1.25';
@@ -29,6 +30,10 @@ const storageIncomeCategoriesKey = 'income_categories_v1';
 const storageLanguageKey = 'language_code_v1';
 const storageThemeKey = 'theme_color_v1';
 const storageCurrencyKey = 'currency_code_v1';
+const storageOpeningBalanceKey = 'opening_balance_v1';
+const storageReminderKey = 'reminder_v1';
+const storagePinKey = 'pin_v1';
+const storageQuickOpenKey = 'quick_open_v1';
 
 const themeVariants = [
   AppThemeVariant('redAmber', 'Red Amber', Color(0xFFE9433D), Color(0xFFFFF2F1)),
@@ -345,6 +350,10 @@ class _FinanceAppState extends State<FinanceApp> {
   String _languageCode = 'id';
   String _themeKey = 'redAmber';
   String _currencyCode = 'IDR';
+  int _openingBalance = 0;
+  bool _reminderEnabled = false;
+  String _pin = '';
+  bool _quickOpenEnabled = false;
 
   @override
   void initState() {
@@ -358,6 +367,10 @@ class _FinanceAppState extends State<FinanceApp> {
       _languageCode = prefs.getString(storageLanguageKey) ?? 'id';
       _themeKey = prefs.getString(storageThemeKey) ?? 'redAmber';
       _currencyCode = prefs.getString(storageCurrencyKey) ?? 'IDR';
+      _openingBalance = prefs.getInt(storageOpeningBalanceKey) ?? 0;
+      _reminderEnabled = prefs.getBool(storageReminderKey) ?? false;
+      _pin = prefs.getString(storagePinKey) ?? '';
+      _quickOpenEnabled = prefs.getBool(storageQuickOpenKey) ?? false;
     });
   }
 
@@ -377,6 +390,30 @@ class _FinanceAppState extends State<FinanceApp> {
     final prefs = await SharedPreferences.getInstance();
     await prefs.setString(storageCurrencyKey, code);
     setState(() => _currencyCode = code);
+  }
+
+  Future<void> _setOpeningBalance(int amount) async {
+    final prefs = await SharedPreferences.getInstance();
+    await prefs.setInt(storageOpeningBalanceKey, amount);
+    setState(() => _openingBalance = amount);
+  }
+
+  Future<void> _setReminderEnabled(bool enabled) async {
+    final prefs = await SharedPreferences.getInstance();
+    await prefs.setBool(storageReminderKey, enabled);
+    setState(() => _reminderEnabled = enabled);
+  }
+
+  Future<void> _setPin(String pin) async {
+    final prefs = await SharedPreferences.getInstance();
+    await prefs.setString(storagePinKey, pin);
+    setState(() => _pin = pin);
+  }
+
+  Future<void> _setQuickOpenEnabled(bool enabled) async {
+    final prefs = await SharedPreferences.getInstance();
+    await prefs.setBool(storageQuickOpenKey, enabled);
+    setState(() => _quickOpenEnabled = enabled);
   }
 
   @override
@@ -399,6 +436,14 @@ class _FinanceAppState extends State<FinanceApp> {
       setTheme: _setTheme,
       currencyCode: _currencyCode,
       setCurrency: _setCurrency,
+      openingBalance: _openingBalance,
+      setOpeningBalance: _setOpeningBalance,
+      reminderEnabled: _reminderEnabled,
+      setReminderEnabled: _setReminderEnabled,
+      pin: _pin,
+      setPin: _setPin,
+      quickOpenEnabled: _quickOpenEnabled,
+      setQuickOpenEnabled: _setQuickOpenEnabled,
       primaryColor: appTheme.primary,
       softColor: appTheme.soft,
       currency: currency,
@@ -485,6 +530,14 @@ class AppLocaleScope extends InheritedWidget {
     required this.setTheme,
     required this.currencyCode,
     required this.setCurrency,
+    required this.openingBalance,
+    required this.setOpeningBalance,
+    required this.reminderEnabled,
+    required this.setReminderEnabled,
+    required this.pin,
+    required this.setPin,
+    required this.quickOpenEnabled,
+    required this.setQuickOpenEnabled,
     required this.primaryColor,
     required this.softColor,
     required this.currency,
@@ -497,6 +550,14 @@ class AppLocaleScope extends InheritedWidget {
   final Future<void> Function(String key) setTheme;
   final String currencyCode;
   final Future<void> Function(String code) setCurrency;
+  final int openingBalance;
+  final Future<void> Function(int amount) setOpeningBalance;
+  final bool reminderEnabled;
+  final Future<void> Function(bool enabled) setReminderEnabled;
+  final String pin;
+  final Future<void> Function(String pin) setPin;
+  final bool quickOpenEnabled;
+  final Future<void> Function(bool enabled) setQuickOpenEnabled;
   final Color primaryColor;
   final Color softColor;
   final CurrencyVariant currency;
@@ -509,7 +570,11 @@ class AppLocaleScope extends InheritedWidget {
   bool updateShouldNotify(AppLocaleScope oldWidget) {
     return oldWidget.languageCode != languageCode ||
         oldWidget.themeKey != themeKey ||
-        oldWidget.currencyCode != currencyCode;
+        oldWidget.currencyCode != currencyCode ||
+        oldWidget.openingBalance != openingBalance ||
+        oldWidget.reminderEnabled != reminderEnabled ||
+        oldWidget.pin != pin ||
+        oldWidget.quickOpenEnabled != quickOpenEnabled;
   }
 }
 
@@ -815,6 +880,7 @@ class _AppShellState extends State<AppShell> {
       return const Scaffold(body: Center(child: CircularProgressIndicator()));
     }
 
+    final scope = AppLocaleScope.of(context);
     return HomePage(
       transactions: List.unmodifiable(_transactions),
       expenseCategories: _expenseCategories,
@@ -827,6 +893,14 @@ class _AppShellState extends State<AppShell> {
       onSaveCategories: _saveCategories,
       onBackupPayload: _backupPayload,
       onRestoreBackup: _restoreBackup,
+      openingBalance: scope.openingBalance,
+      setOpeningBalance: scope.setOpeningBalance,
+      reminderEnabled: scope.reminderEnabled,
+      setReminderEnabled: scope.setReminderEnabled,
+      pin: scope.pin,
+      setPin: scope.setPin,
+      quickOpenEnabled: scope.quickOpenEnabled,
+      setQuickOpenEnabled: scope.setQuickOpenEnabled,
     );
   }
 }
@@ -885,6 +959,14 @@ class HomePage extends StatefulWidget {
     required this.onSaveCategories,
     required this.onBackupPayload,
     required this.onRestoreBackup,
+    required this.openingBalance,
+    required this.setOpeningBalance,
+    required this.reminderEnabled,
+    required this.setReminderEnabled,
+    required this.pin,
+    required this.setPin,
+    required this.quickOpenEnabled,
+    required this.setQuickOpenEnabled,
   });
 
   final List<MoneyTransaction> transactions;
@@ -898,6 +980,14 @@ class HomePage extends StatefulWidget {
   final Future<void> Function(String type, List<String> categories) onSaveCategories;
   final Future<Map<String, dynamic>> Function() onBackupPayload;
   final Future<void> Function(Map<String, dynamic> backup) onRestoreBackup;
+  final int openingBalance;
+  final Future<void> Function(int amount) setOpeningBalance;
+  final bool reminderEnabled;
+  final Future<void> Function(bool enabled) setReminderEnabled;
+  final String pin;
+  final Future<void> Function(String pin) setPin;
+  final bool quickOpenEnabled;
+  final Future<void> Function(bool enabled) setQuickOpenEnabled;
 
   @override
   State<HomePage> createState() => _HomePageState();
@@ -994,6 +1084,14 @@ class _HomePageState extends State<HomePage> with SingleTickerProviderStateMixin
         onBackupPayload: widget.onBackupPayload,
         onRestoreBackup: widget.onRestoreBackup,
         transactions: widget.transactions,
+        openingBalance: widget.openingBalance,
+        setOpeningBalance: widget.setOpeningBalance,
+        reminderEnabled: widget.reminderEnabled,
+        setReminderEnabled: widget.setReminderEnabled,
+        pin: widget.pin,
+        setPin: widget.setPin,
+        quickOpenEnabled: widget.quickOpenEnabled,
+        setQuickOpenEnabled: widget.setQuickOpenEnabled,
       ),
       body: Column(
         children: [
@@ -1759,6 +1857,14 @@ class AppMenu extends StatelessWidget {
     required this.onBackupPayload,
     required this.onRestoreBackup,
     required this.transactions,
+    required this.openingBalance,
+    required this.setOpeningBalance,
+    required this.reminderEnabled,
+    required this.setReminderEnabled,
+    required this.pin,
+    required this.setPin,
+    required this.quickOpenEnabled,
+    required this.setQuickOpenEnabled,
   });
 
   final ValueChanged<Widget> onNavigate;
@@ -1768,6 +1874,14 @@ class AppMenu extends StatelessWidget {
   final Future<Map<String, dynamic>> Function() onBackupPayload;
   final Future<void> Function(Map<String, dynamic> backup) onRestoreBackup;
   final List<MoneyTransaction> transactions;
+  final int openingBalance;
+  final Future<void> Function(int amount) setOpeningBalance;
+  final bool reminderEnabled;
+  final Future<void> Function(bool enabled) setReminderEnabled;
+  final String pin;
+  final Future<void> Function(String pin) setPin;
+  final bool quickOpenEnabled;
+  final Future<void> Function(bool enabled) setQuickOpenEnabled;
 
   @override
   Widget build(BuildContext context) {
@@ -1800,7 +1914,18 @@ class AppMenu extends StatelessWidget {
             DrawerItem(icon: Icons.search, color: Colors.orange, title: t(context, 'search'), onTap: () => onNavigate(SearchPage(transactions: transactions, categories: [...expenseCategories, ...incomeCategories], onEdit: (_) {}))),
             DrawerItem(icon: Icons.pie_chart_outline, color: Colors.purple.shade300, title: t(context, 'chart'), onTap: () => onNavigate(GraphPage(transactions: transactions))),
             DrawerItem(icon: Icons.assignment_outlined, color: Colors.red.shade300, title: t(context, 'category'), onTap: () => onNavigate(CategoryPage(expenseCategories: expenseCategories, incomeCategories: incomeCategories, onSaveCategories: onSaveCategories))),
-            DrawerItem(icon: Icons.settings_outlined, color: Colors.lightBlue, title: t(context, 'settings'), onTap: () => onNavigate(SettingsPage(onBackupPayload: onBackupPayload, onRestoreBackup: onRestoreBackup))),
+            DrawerItem(icon: Icons.settings_outlined, color: Colors.lightBlue, title: t(context, 'settings'), onTap: () => onNavigate(SettingsPage(
+              onBackupPayload: onBackupPayload,
+              onRestoreBackup: onRestoreBackup,
+              openingBalance: openingBalance,
+              setOpeningBalance: setOpeningBalance,
+              reminderEnabled: reminderEnabled,
+              setReminderEnabled: setReminderEnabled,
+              pin: pin,
+              setPin: setPin,
+              quickOpenEnabled: quickOpenEnabled,
+              setQuickOpenEnabled: setQuickOpenEnabled,
+            ))),
             DrawerItem(icon: Icons.star_border, color: Colors.amber, title: t(context, 'rate'), onTap: () => showSnack(context, 'Terima kasih atas penilaiannya.')),
             DrawerItem(icon: Icons.help_outline, color: Colors.green, title: t(context, 'help'), onTap: () => onNavigate(const HelpPage())),
             DrawerItem(icon: Icons.info_outline, color: Colors.teal.shade300, title: t(context, 'about'), onTap: () => onNavigate(const AboutPage())),
@@ -2197,13 +2322,30 @@ class SettingsPage extends StatelessWidget {
     super.key,
     required this.onBackupPayload,
     required this.onRestoreBackup,
+    required this.openingBalance,
+    required this.setOpeningBalance,
+    required this.reminderEnabled,
+    required this.setReminderEnabled,
+    required this.pin,
+    required this.setPin,
+    required this.quickOpenEnabled,
+    required this.setQuickOpenEnabled,
   });
 
   final Future<Map<String, dynamic>> Function() onBackupPayload;
   final Future<void> Function(Map<String, dynamic> backup) onRestoreBackup;
+  final int openingBalance;
+  final Future<void> Function(int amount) setOpeningBalance;
+  final bool reminderEnabled;
+  final Future<void> Function(bool enabled) setReminderEnabled;
+  final String pin;
+  final Future<void> Function(String pin) setPin;
+  final bool quickOpenEnabled;
+  final Future<void> Function(bool enabled) setQuickOpenEnabled;
 
   @override
   Widget build(BuildContext context) {
+    final scope = AppLocaleScope.of(context);
     return Scaffold(
       appBar: AppBar(
         leading: IconButton(icon: const Icon(Icons.arrow_back), onPressed: () => Navigator.pop(context)),
@@ -2213,28 +2355,53 @@ class SettingsPage extends StatelessWidget {
         children: [
           SettingsTile(
             title: t(context, 'themeColor'),
-            subtitle: themeName(AppLocaleScope.of(context).themeKey),
+            subtitle: themeName(scope.themeKey),
             onTap: () => showThemePicker(context),
           ),
           SettingsTile(
             title: t(context, 'currencyFormat'),
-            subtitle: currencyName(AppLocaleScope.of(context).currencyCode),
+            subtitle: currencyName(scope.currencyCode),
             onTap: () => showCurrencyPicker(context),
           ),
-          SettingsTile(title: t(context, 'openingBalance'), subtitle: t(context, 'inactive')),
-          SettingsTile(title: t(context, 'removeAds'), subtitle: t(context, 'inactive')),
+          SettingsTile(
+            title: t(context, 'openingBalance'),
+            subtitle: openingBalance == 0 ? t(context, 'inactive') : money(openingBalance, context),
+            onTap: () => _showOpeningBalanceDialog(context),
+          ),
           SettingsTile(title: t(context, 'transactionTime'), subtitle: t(context, 'inactive')),
           SettingsTile(
             title: t(context, 'selectLanguage'),
-            subtitle: languageName(AppLocaleScope.of(context).languageCode),
+            subtitle: languageName(scope.languageCode),
             onTap: () => showLanguagePicker(context),
           ),
           SettingsTile(title: t(context, 'firstWeekday'), subtitle: 'Minggu'),
           SettingsTile(title: t(context, 'firstMonthDate'), subtitle: '1'),
           const Divider(thickness: 2),
-          SettingsTile(title: t(context, 'reminder'), subtitle: t(context, 'inactive'), onTap: () => showSnack(context, '${t(context, 'reminder')} ${t(context, 'inactive').toLowerCase()}')),
-          SettingsTile(title: t(context, 'pin'), subtitle: t(context, 'inactive'), onTap: () => showSnack(context, '${t(context, 'pin')} ${t(context, 'inactive').toLowerCase()}')),
-          SettingsTile(title: t(context, 'quickOpen'), subtitle: t(context, 'inactive'), onTap: () => showSnack(context, '${t(context, 'quickOpen')} ${t(context, 'inactive').toLowerCase()}')),
+          SettingsTile(
+            title: t(context, 'reminder'),
+            subtitle: reminderEnabled ? 'Aktif' : t(context, 'inactive'),
+            trailing: Switch(
+              value: reminderEnabled,
+              onChanged: (value) => scope.setReminderEnabled(value),
+              activeColor: appPrimary(context),
+            ),
+            onTap: () => scope.setReminderEnabled(!reminderEnabled),
+          ),
+          SettingsTile(
+            title: t(context, 'pin'),
+            subtitle: pin.isEmpty ? t(context, 'inactive') : 'Terpasang',
+            onTap: () => _showPinDialog(context),
+          ),
+          SettingsTile(
+            title: t(context, 'quickOpen'),
+            subtitle: quickOpenEnabled ? 'Aktif' : t(context, 'inactive'),
+            trailing: Switch(
+              value: quickOpenEnabled,
+              onChanged: (value) => scope.setQuickOpenEnabled(value),
+              activeColor: appPrimary(context),
+            ),
+            onTap: () => scope.setQuickOpenEnabled(!quickOpenEnabled),
+          ),
           const Divider(thickness: 2),
           SettingsTile(title: t(context, 'backupDrive'), onTap: () => showBackupSheet(context, true)),
           SettingsTile(title: t(context, 'backupStorage'), onTap: () => showBackupSheet(context, false)),
@@ -2245,6 +2412,182 @@ class SettingsPage extends StatelessWidget {
         ],
       ),
     );
+  }
+
+  Future<void> _showOpeningBalanceDialog(BuildContext context) async {
+    final controller = TextEditingController(text: openingBalance == 0 ? '' : openingBalance.toString());
+    final result = await showDialog<int>(
+      context: context,
+      builder: (context) => AlertDialog(
+        title: Text(t(context, 'openingBalance')),
+        content: TextField(
+          controller: controller,
+          keyboardType: TextInputType.number,
+          inputFormatters: [MoneyInputFormatter(context)],
+          autofocus: true,
+          decoration: const InputDecoration(hintText: '0'),
+        ),
+        actions: [
+          TextButton(onPressed: () => Navigator.pop(context), child: const Text('Batal')),
+          FilledButton(
+            onPressed: () => Navigator.pop(context, parseMoneyInput(controller.text)),
+            child: const Text('Simpan'),
+          ),
+        ],
+      ),
+    );
+    if (result != null && context.mounted) {
+      await AppLocaleScope.of(context).setOpeningBalance(result);
+      showSnack(context, result == 0 ? 'Saldo bawaan dihapus' : 'Saldo bawaan disimpan');
+    }
+  }
+
+  Future<void> _showPinDialog(BuildContext context) async {
+    if (pin.isEmpty) {
+      final controller = TextEditingController();
+      final confirmController = TextEditingController();
+      final result = await showDialog<String>(
+        context: context,
+        builder: (context) => AlertDialog(
+          title: const Text('Atur PIN Baru'),
+          content: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              TextField(
+                controller: controller,
+                keyboardType: TextInputType.number,
+                maxLength: 6,
+                obscureText: true,
+                decoration: const InputDecoration(labelText: 'PIN (6 digit)'),
+              ),
+              TextField(
+                controller: confirmController,
+                keyboardType: TextInputType.number,
+                maxLength: 6,
+                obscureText: true,
+                decoration: const InputDecoration(labelText: 'Konfirmasi PIN'),
+              ),
+            ],
+          ),
+          actions: [
+            TextButton(onPressed: () => Navigator.pop(context), child: const Text('Batal')),
+            FilledButton(
+              onPressed: () {
+                if (controller.text.length != 6 || controller.text != confirmController.text) {
+                  showSnack(context, 'PIN harus 6 digit dan sama');
+                  return;
+                }
+                Navigator.pop(context, controller.text);
+              },
+              child: const Text('Simpan'),
+            ),
+          ],
+        ),
+      );
+      if (result != null && context.mounted) {
+        await AppLocaleScope.of(context).setPin(result);
+        showSnack(context, 'PIN disimpan');
+      }
+    } else {
+      final action = await showDialog<String>(
+        context: context,
+        builder: (context) => AlertDialog(
+          title: const Text('Kelola PIN'),
+          content: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              ListTile(
+                leading: const Icon(Icons.lock_open),
+                title: const Text('Masukkan PIN saat ini'),
+                onTap: () async {
+                  Navigator.pop(context, 'verify');
+                },
+              ),
+              ListTile(
+                leading: const Icon(Icons.delete),
+                title: const Text('Hapus PIN'),
+                onTap: () async {
+                  Navigator.pop(context, 'delete');
+                },
+              ),
+            ],
+          ),
+        ),
+      );
+      if (action == 'verify' && context.mounted) {
+        final verifyController = TextEditingController();
+        final verified = await showDialog<bool>(
+          context: context,
+          builder: (context) => AlertDialog(
+            title: const Text('Verifikasi PIN'),
+            content: TextField(
+              controller: verifyController,
+              keyboardType: TextInputType.number,
+              maxLength: 6,
+              obscureText: true,
+              decoration: const InputDecoration(labelText: 'Masukkan PIN'),
+              autofocus: true,
+            ),
+            actions: [
+              TextButton(onPressed: () => Navigator.pop(context, false), child: const Text('Batal')),
+              FilledButton(onPressed: () => Navigator.pop(context, verifyController.text == pin), child: const Text('OK')),
+            ],
+          ),
+        );
+        if (verified == true && context.mounted) {
+          final newPinController = TextEditingController();
+          final confirmNewPinController = TextEditingController();
+          final newPin = await showDialog<String>(
+            context: context,
+            builder: (context) => AlertDialog(
+              title: const Text('PIN Baru'),
+              content: Column(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  TextField(
+                    controller: newPinController,
+                    keyboardType: TextInputType.number,
+                    maxLength: 6,
+                    obscureText: true,
+                    decoration: const InputDecoration(labelText: 'PIN Baru (6 digit)'),
+                  ),
+                  TextField(
+                    controller: confirmNewPinController,
+                    keyboardType: TextInputType.number,
+                    maxLength: 6,
+                    obscureText: true,
+                    decoration: const InputDecoration(labelText: 'Konfirmasi PIN'),
+                  ),
+                ],
+              ),
+              actions: [
+                TextButton(onPressed: () => Navigator.pop(context), child: const Text('Batal')),
+                FilledButton(
+                  onPressed: () {
+                    if (newPinController.text.length != 6 || newPinController.text != confirmNewPinController.text) {
+                      showSnack(context, 'PIN harus 6 digit dan sama');
+                      return;
+                    }
+                    Navigator.pop(context, newPinController.text);
+                  },
+                  child: const Text('Simpan'),
+                ),
+              ],
+            ),
+          );
+          if (newPin != null && context.mounted) {
+            await AppLocaleScope.of(context).setPin(newPin);
+            showSnack(context, 'PIN diperbarui');
+          }
+        }
+      } else if (action == 'delete' && context.mounted) {
+        final shouldDelete = await confirm(context, 'Hapus PIN?');
+        if (shouldDelete) {
+          await AppLocaleScope.of(context).setPin('');
+          showSnack(context, 'PIN dihapus');
+        }
+      }
+    }
   }
 
   Future<void> showLanguagePicker(BuildContext context) async {
@@ -2445,11 +2788,13 @@ class SettingsTile extends StatelessWidget {
     required this.title,
     this.subtitle,
     this.onTap,
+    this.trailing,
   });
 
   final String title;
   final String? subtitle;
   final VoidCallback? onTap;
+  final Widget? trailing;
 
   @override
   Widget build(BuildContext context) {
@@ -2491,7 +2836,8 @@ class SettingsTile extends StatelessWidget {
                     ],
                   ),
                 ),
-                if (onTap != null) const Icon(Icons.chevron_right, size: 24, color: textMuted),
+                if (trailing != null) trailing!,
+                if (trailing == null && onTap != null) const Icon(Icons.chevron_right, size: 24, color: textMuted),
               ],
             ),
           ),
@@ -2705,24 +3051,50 @@ class DonationPage extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final values = [1000, 2000, 5000, 10000, 15000, 25000, 35000, 50000];
     return Scaffold(
       appBar: AppBar(
         leading: IconButton(icon: const Icon(Icons.arrow_back), onPressed: () => Navigator.pop(context)),
         title: const Text('Hadiah untuk developer'),
       ),
-      body: ListView.separated(
-        itemCount: values.length,
-        separatorBuilder: (context, index) => const Divider(height: 1),
-        itemBuilder: (_, index) => ListTile(
-          tileColor: Colors.white,
-          contentPadding: const EdgeInsets.symmetric(horizontal: 30, vertical: 18),
-          title: Text(money(values[index], context), style: const TextStyle(fontSize: 22, color: Color(0xFF5C5C5C))),
-          trailing: const Icon(Icons.card_giftcard, color: Color(0xFF8F8F8F), size: 36),
-          onTap: () => showSnack(context, 'Terima kasih. Fitur hadiah dapat disambungkan ke payment gateway.'),
+      body: Padding(
+        padding: const EdgeInsets.all(24),
+        child: Column(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            const Icon(Icons.favorite, size: 80, color: Colors.red),
+            const SizedBox(height: 24),
+            const Text(
+              'Dukung pengembangan aplikasi ini',
+              textAlign: TextAlign.center,
+              style: TextStyle(fontSize: 20, fontWeight: FontWeight.w600),
+            ),
+            const SizedBox(height: 12),
+            const Text(
+              'Kunjungi Saweria untuk memberikan donasi',
+              textAlign: TextAlign.center,
+              style: TextStyle(fontSize: 16, color: textMuted),
+            ),
+            const SizedBox(height: 32),
+            SizedBox(
+              width: double.infinity,
+              height: 56,
+              child: FilledButton.icon(
+                icon: const Icon(Icons.favorite, color: Colors.white),
+                label: const Text('Buka Saweria', style: TextStyle(fontSize: 18, fontWeight: FontWeight.w700)),
+                onPressed: () => _openSaweria(),
+              ),
+            ),
+          ],
         ),
       ),
     );
+  }
+
+  Future<void> _openSaweria() async {
+    const url = 'https://saweria.co/seandyadryan';
+    if (await canLaunchUrl(Uri.parse(url))) {
+      await launchUrl(Uri.parse(url), mode: LaunchMode.externalApplication);
+    }
   }
 }
 
